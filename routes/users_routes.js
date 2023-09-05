@@ -5,24 +5,20 @@ import UsersModle from "../modles/users.js";
 
 const userExpress = express.Router();
 
-userExpress.get("/", userController.getUsers);
-userExpress.post("/newUser" , userController.addNewUser);
-userExpress.post("/loginByemailpass" , userController.loginUserByEmailPass);
+userExpress.get("/getClient", userController.getClient);
+userExpress.get("/getCompany", userController.getCompany);
+userExpress.get("/getDriver", userController.getDriver);
 
-// userExpress.post("/get-user-type", async (req, res) => {
-//     const { email, pass } = req.body;
-  
-//     try {
-//       const user = await UsersModle.getUserByCredentials(email, pass);
-  
-//       if (user) {
-//         res.send(user.user_type.toString());
-//       } else {
-//         res.status(404).json({ message: "User not found" });
-//       }
-//     } catch (error) {
-//       console.error("Error:", error);
-//       res.status(500).json({ message: "Internal server error" });
-//     }
-// });
+
+userExpress.post("/signUpClientaccount" , userController.addClientAccount);
+userExpress.post("/signUp-Driver-Account" , userController.addDriverAccount);
+userExpress.post("/signUp-Company-Account" , userController.addCompanyAccount);
+
+userExpress.post("/loginUserBy_Email&Pass" , userController.loginUserByEmailPass);
+userExpress.post("/checkEmailVerify" , userController.checkTheCodeIsVerified);
+userExpress.post("/reSendVerificationCode" , userController.reSendverificationCode);
+userExpress.post("/updatePassword" , userController.updatePassowrd);
+
+
+
 export default userExpress

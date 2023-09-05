@@ -1,9 +1,9 @@
 import mysql from "mysql"
 
 const myDataBase = mysql.createPool({
-    host:"localhost",
-    user:"root",
-    password:"",
+    host: "localhost",
+    user: "root",     // Replace with your MySQL username
+    password: "",
     database:"my_gas_db"
 });
 
