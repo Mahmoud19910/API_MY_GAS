@@ -1,6 +1,7 @@
 import express from "express"
 import usersRoute from "./routes/users_routes.js"
 import companyRoute from "./routes/company_routes.js"
+import clientRoutes from "./routes/client_routes.js"
 
 
 // import nodemailer from 'nodemailer'; // Use import here
@@ -43,6 +44,8 @@ appExpress.use(express.json()); // Use express.json() middleware to parse JSON d
 
 appExpress.use("/user" , usersRoute);
 appExpress.use("/company" , companyRoute);
+appExpress.use("/client" , clientRoutes);
+
 
 
 appExpress.listen(port , ()=>console.log("Runing on port num   "+port));
