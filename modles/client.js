@@ -75,7 +75,7 @@ class ClientModel {
            const currentMinute = currentTime.getMinutes();    
 
             db.query("INSERT INTO app_notifications (sender_image , client_name , reciver_id , content , time) VALUES (? , ? , ? , ? , ?)" ,
-             [sender_image , client_name , client_id , `طلب ${filling_cylinder}` , `${currentHour}:${currentMinute}`] , (error , result)=>{
+             [sender_image , client_name , client_id , `طلب ${filling_cylinder} \n ${buy_cylinder}` , `${currentHour}:${currentMinute}`] , (error , result)=>{
 
                 if(!error){
                     resolve(result)
@@ -124,7 +124,7 @@ class ClientModel {
     static async getAllOrderFromDataBase(){
 
         return new Promise((resolve , reject)=>{
-            db.query("SELECT * FROM client_orders , " , [] , (error , result)=>{
+            db.query("SELECT * FROM client_orders " , [] , (error , result)=>{
                 if(!error){
                     resolve(result)
                 }else{
@@ -157,9 +157,10 @@ class ClientModel {
 
             if(reciver_type === "company" || sender_type === "company" && sender_type === "client" || reciver_type === "client"){
 
+                console.log("1")
                 db.query(
-                    "SELECT * FROM chat LEFT JOIN users_info AS sender_info ON chat.sender_id = sender_info.id LEFT JOIN company_account AS reciver_info ON chat.reciver_id = reciver_info.id WHERE (chat.sender_id = ? AND chat.reciver_id = ?) OR (chat.sender_id = ? AND chat.reciver_id = ?) AND (chat.reciver_type = ? OR chat.sender_type = ? )",
-                    [sender_id, reciver_id  , reciver_id , sender_id , 'company' , 'company' ],
+                    "SELECT * FROM chat LEFT JOIN users_info AS sender_info ON chat.sender_id = sender_info.id LEFT JOIN company_account AS reciver_info ON chat.reciver_id = reciver_info.id WHERE (chat.sender_id = ? AND chat.reciver_id = ?) OR (chat.sender_id = ? AND chat.reciver_id = ?) ",
+                    [sender_id , reciver_id  , reciver_id , sender_id ],
                     (error, result) => {
                         if (!error) {
                             resolve(result);
@@ -172,7 +173,7 @@ class ClientModel {
             }
             else
             if(reciver_type === "driver" || sender_type === "driver" && sender_type === "client" || reciver_type === "client"){
-
+console.log("2")
                 db.query(
                     "SELECT * FROM chat LEFT JOIN users_info AS sender_info ON chat.sender_id = sender_info.id LEFT JOIN driver_account AS reciver_info ON chat.reciver_id = reciver_info.id WHERE (chat.sender_id = ? AND chat.reciver_id = ?) OR (chat.sender_id = ? AND chat.reciver_id = ?) AND (chat.reciver_type = ? OR chat.sender_type = ? )",
                     [sender_id, reciver_id  , reciver_id , sender_id , 'driver' , 'driver' ],

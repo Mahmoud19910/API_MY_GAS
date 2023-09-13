@@ -295,8 +295,8 @@ class ClientController{
 
         try{
 
-            const {sender_id , reciver_id , reciver_type } = request.body
-            const result = await clientModle.getAllmessagesById(sender_id , reciver_id ,  reciver_type);
+            const {sender_id , reciver_id ,sender_type , reciver_type } = request.body
+            const result = await clientModle.getAllmessagesById(sender_id , reciver_id ,  reciver_type , sender_type) ;
 
             if(result){
                 response.status(200).json({

@@ -156,7 +156,8 @@ static async addClientAccount(request, response) {
         //     "data":null
         //  });
 
-         const result = await usersModle.addClient(name, user_type, email, pass , verificationCode);
+       
+         const result = await usersModle.addClient( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass , verificationCode);
 
          if (result) {
                  response.status(200).json({
@@ -195,79 +196,209 @@ static async addClientAccount(request, response) {
 }
 
 // تسجيل سائق جديد
-static async addDriverAccount(request, response) {
-    const { name, user_type, email, pass , vehicle_number , phone , lat_location , long_location} = request.body;
+// static async addDriverAccount(request, response) {
+//     const { name, user_type, email, pass , vehicle_number , phone , lat_location , long_location} = request.body;
 
-    try{
- // Check email format
- const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
- if (!emailPattern.test(email)) {
-     response.status(400).send("Invalid email format");
-     return;
- }
+//     try{
+//  // Check email format
+//  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//  if (!emailPattern.test(email)) {
+//      response.status(400).send("Invalid email format");
+//      return;
+//  }
 
-    // Generate a random 6-digit verification code
-    verificationCode = Math.floor(100000 + Math.random() * 900000);
- const result = await usersModle.addDriver(name, user_type, email, pass  , verificationCode , vehicle_number , phone , lat_location , long_location);
+//     // Generate a random 6-digit verification code
+//     verificationCode = Math.floor(100000 + Math.random() * 900000);
+//  const result = await usersModle.addDriver( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass  , verificationCode , vehicle_number , phone , lat_location , long_location);
 
- if (result) {
-     response.status(200).json({
-        "status":true,
-        "message":"Success Add Users",
-        "data":null
-     });
+//  if (result) {
+//      response.status(200).json({
+//         "status":true,
+//         "message":"Success Add Users",
+//         "data":null
+//      });
 
-     //اذا تمت العملية بنجاح يتم توليد رقم تحقق و ارساله للايميل المدخل من قبل المستخدم
+//      //اذا تمت العملية بنجاح يتم توليد رقم تحقق و ارساله للايميل المدخل من قبل المستخدم
 
-     const mailOptions = {
-        from: 'mahmoud8371997@gmail.com',
-        to: email,
-        subject: 'Verification code my_gas_app ',
-        text: `Your verification code is: ${verificationCode}`,
-    };
+//     const mailOptions = {
+//         from: 'mahmoud8371997@gmail.com',
+//         to: email,
+//         subject: 'Verification code my_gas_app ',
+//         text: `Your verification code is: ${verificationCode}`,
+//     };
+
+   
 
   
-    try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent:', info.response);
-        response.status(200).json({
-            "status":true,
-            "message":"Success Verified ",
-            "data":null
-         });
+//     try {
+//         const info = await transporter.sendMail(mailOptions);
+//         console.log('Email sent:', info.response);
+//         response.status(200).json({
+//             "status":true,
+//             "message":"Success Verified ",
+//             "data":null
+//          });
    
 
      
 
-        return true; // Email sent successfully
-    } catch (error) {
-        response.status(404).json({
-            "status":false,
-            "message":e,
-            "data":null
-         });
-        return false; // Failed to send email
-    }
+//         return true; // Email sent successfully
+//     } catch (error) {
+//         response.status(404).json({
+//             "status":false,
+//             "message":e,
+//             "data":null
+//          });
+//         return false; // Failed to send email
+//     }
 
-    } else {
-     response.status(404).json({
-        "status":false,
-        "message":"Not Found",
-        "data":null
-     });
- }
-    }catch(error){
-        response.status(500).json({
-            "status":false,
-            "message":error,
-            "data":null
-         });
-    }
+//     } else {
+//      response.status(404).json({
+//         "status":false,
+//         "message":"Not Found",
+//         "data":null
+//      });
+//  }
+//     }catch(error){
+//         response.status(500).json({
+//             "status":false,
+//             "message":error,
+//             "data":error
+//          });
+//     }
 
    
+// }
+// تسجيل سائق جديد
+static async addDriverAccount(request, response) {
+    const { name, user_type, email, pass , vehicle_number , phone , lat_location , long_location} = request.body;
+
+    try {
+        // Check email format
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            return response.status(400).send("Invalid email format");
+        }
+
+        // Generate a random 6-digit verification code
+        verificationCode = Math.floor(100000 + Math.random() * 900000);
+        const result = await usersModle.addDriver( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass, verificationCode, vehicle_number, phone, lat_location, long_location);
+
+        if (result) {
+            // اذا تمت العملية بنجاح يتم توليد رقم تحقق و ارساله للايميل المدخل من قبل المستخدم
+            const mailOptions = {
+                from: 'mahmoud8371997@gmail.com',
+                to: email,
+                subject: 'Verification code my_gas_app ',
+                text: `Your verification code is: ${verificationCode}`,
+            };
+
+            try {
+                const info = await transporter.sendMail(mailOptions);
+                console.log('Email sent:', info.response);
+                return response.status(200).json({
+                    "status": true,
+                    "message": "Success Verified ",
+                    "data": null
+                });
+            } catch (error) {
+                console.error('Error sending email:', error);
+                return response.status(500).json({
+                    "status": false,
+                    "message": error,
+                    "data": null
+                });
+            }
+        } else {
+            return response.status(404).json({
+                "status": false,
+                "message": "Not Found",
+                "data": null
+            });
+        }
+    } catch (error) {
+        return response.status(500).json({
+            "status": false,
+            "message": error,
+            "data": error
+        });
+    }
 }
 
+
 // تسجيل شركة جديد
+// static async addCompanyAccount(request, response) {
+//     const { name, user_type, email, pass , company_registration_number , phone , lat_location , long_location} = request.body;
+
+//     try{
+//  // Check email format
+//  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//  if (!emailPattern.test(email)) {
+//      response.status(400).send("Invalid email format");
+//      return;
+//  }
+
+//     // Generate a random 6-digit verification code
+//     verificationCode = Math.floor(100000 + Math.random() * 900000);
+//  const result = await usersModle.addCompany( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass  , company_registration_number  , phone , lat_location , long_location , verificationCode);
+
+//  if (result) {
+//      response.status(200).json({
+//         "status":true,
+//         "message":"Success Add Users",
+//         "data":null
+//      });
+
+//      //اذا تمت العملية بنجاح يتم توليد رقم تحقق و ارساله للايميل المدخل من قبل المستخدم
+
+//      const mailOptions = {
+//         from: 'mahmoud8371997@gmail.com',
+//         to: email,
+//         subject: 'Verification code my_gas_app ',
+//         text: `Your verification code is: ${verificationCode}`,
+//     };
+
+  
+//     try {
+//         const info = await transporter.sendMail(mailOptions);
+//         console.log('Email sent:', info.response);
+//         response.status(200).json({
+//             "status":true,
+//             "message":"Success Verified ",
+//             "data":null
+//          });
+   
+
+     
+
+//         return true; // Email sent successfully
+//     } catch (error) {
+//         response.status(404).json({
+//             "status":false,
+//             "message":e,
+//             "data":null
+//          });
+//         return false; // Failed to send email
+//     }
+
+//     } else {
+//      response.status(404).json({
+//         "status":false,
+//         "message":"Not Found",
+//         "data":null
+//      });
+//  }
+//     }catch(error){
+//         response.status(500).json({
+//             "status":false,
+//             "message":error,
+//             "data":null
+//          });
+//     }
+
+   
+// }
+
 static async addCompanyAccount(request, response) {
     const { name, user_type, email, pass , company_registration_number , phone , lat_location , long_location} = request.body;
 
@@ -281,54 +412,41 @@ static async addCompanyAccount(request, response) {
 
     // Generate a random 6-digit verification code
     verificationCode = Math.floor(100000 + Math.random() * 900000);
- const result = await usersModle.addCompany(name, user_type, email, pass  , company_registration_number  , phone , lat_location , long_location , verificationCode);
+ const result = await usersModle.addCompany( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass  , company_registration_number  , phone , lat_location , long_location , verificationCode);
 
  if (result) {
-     response.status(200).json({
-        "status":true,
-        "message":"Success Add Users",
-        "data":null
-     });
-
-     //اذا تمت العملية بنجاح يتم توليد رقم تحقق و ارساله للايميل المدخل من قبل المستخدم
-
-     const mailOptions = {
+    // اذا تمت العملية بنجاح يتم توليد رقم تحقق و ارساله للايميل المدخل من قبل المستخدم
+    const mailOptions = {
         from: 'mahmoud8371997@gmail.com',
         to: email,
         subject: 'Verification code my_gas_app ',
         text: `Your verification code is: ${verificationCode}`,
     };
 
-  
     try {
         const info = await transporter.sendMail(mailOptions);
         console.log('Email sent:', info.response);
-        response.status(200).json({
-            "status":true,
-            "message":"Success Verified ",
-            "data":null
-         });
-   
-
-     
-
-        return true; // Email sent successfully
+        return response.status(200).json({
+            "status": true,
+            "message": "Success Verified ",
+            "data": null
+        });
     } catch (error) {
-        response.status(404).json({
-            "status":false,
-            "message":e,
-            "data":null
-         });
-        return false; // Failed to send email
+        console.error('Error sending email:', error);
+        return response.status(500).json({
+            "status": false,
+            "message": error,
+            "data": null
+        });
     }
-
-    } else {
-     response.status(404).json({
-        "status":false,
-        "message":"Not Found",
-        "data":null
-     });
- }
+} else {
+    return response.status(404).json({
+        "status": false,
+        "message": "Not Found",
+        "data": null
+    });
+}
+ 
     }catch(error){
         response.status(500).json({
             "status":false,
@@ -428,12 +546,18 @@ static async loginUserByEmailPass(request , response){
 
     // التحقق من آن رمز التحقق صحيح
 static async checkTheCodeIsVerified(request , response){
-        const {email , verificationCode} =request.body;
+        const {email , verificationCode , user_type} =request.body;
 
-            const result = await usersModle.getUserByIdToVerifyAccount(email);
+        console.log(`The Verification Code is : ${verificationCode} ${email}`)
+
+            const result = await usersModle.getUserByIdToVerifyAccount(email , user_type);
+
+            console.log(`Result  : ${result.verificationCode}`)
             
         try{
             if (verificationCode !== null && verificationCode === result.verificationCode) {
+                console.log(`try ${request.body}`)
+
                 response.status(200).json({
                     "status": true,
                     "message": "Succes Verify",
@@ -447,6 +571,8 @@ static async checkTheCodeIsVerified(request , response){
                   });
             }
         }catch(error){
+            console.log(`catch ${request.body}`)
+
             response.status(500).json({
                 "status": false,
                 "message": error,

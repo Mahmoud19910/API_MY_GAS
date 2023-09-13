@@ -53,10 +53,10 @@ class UsersModle{
     }
 
     // انشا حساب عميل 
-    static async addClient(name , user_type , email , pass , verificationCode){
+    static async addClient(id , name , user_type , email , pass , verificationCode){
         return new Promise((resolve , reject)=>{
 
-            db.query("insert into users_info (name , user_type , email , pass , verificationCode) values (?,?,?,?,?) " , [name , user_type , email , pass , verificationCode] , (error , result)=>{
+            db.query("insert into users_info (id , name , user_type , email , pass , verificationCode , phone , image ) values (?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , verificationCode , "" , ""] , (error , result)=>{
                 if(!error){
                     resolve(result);
                 }else{
@@ -67,10 +67,10 @@ class UsersModle{
     }
 
     // انشا حساب سائق 
-    static async addDriver(name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location){
+    static async addDriver(id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location){
         return new Promise((resolve , reject)=>{
 
-            db.query("insert into driver_account (name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location) values (?,?,?,?,?,?,?,?,?) " , [name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location] , (error , result)=>{
+            db.query("insert into driver_account (id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location , evaluations , orders_number , image) values (?,?,?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location , 0 , 0 , ""] , (error , result)=>{
                 if(!error){
                     resolve(result);
                 }else{
@@ -81,10 +81,10 @@ class UsersModle{
     }
 
     // انشا حساب شركة 
-    static async addCompany(name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode){
+    static async addCompany(id , name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode){
         return new Promise((resolve , reject)=>{
 
-            db.query("insert into  company_account (name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode) values (?,?,?,?,?,?,?,?,?) " , [name , user_type , email , pass , company_registration_number , phone ,  lat_location , long_location , verificationCode] , (error , result)=>{
+            db.query("insert into  company_account (id , name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode , evaluations , orders_number , image) values (?,?,?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , company_registration_number , phone ,  lat_location , long_location , verificationCode , 0 , 0 ,""] , (error , result)=>{
                 if(!error){
                     resolve(result);
                 }else{
@@ -154,15 +154,42 @@ class UsersModle{
         });
     }
 
-    static async getUserByIdToVerifyAccount(email) {
+    static async getUserByIdToVerifyAccount(email , user_type) {
         return new Promise((resolve, reject) => {
-            db.query("SELECT * FROM users_info WHERE email = ?", [email], (error, result) => {
-                if (!error) {
-                    resolve(result[0]);
-                } else {
-                    reject(error);
-                }
-            });
+
+            if(user_type === "company"){
+                db.query("SELECT * FROM company_account WHERE email = ?", [email], (error, result) => {
+                    if (!error) {
+                        console.log(`Data Badse email ${result[0]}`)
+                        resolve(result[0]);
+                    } else {
+                        reject(error);
+                    }
+                });
+            }
+            else
+            if(user_type === "driver"){
+                db.query("SELECT * FROM driver_account WHERE email = ?", [email], (error, result) => {
+                    if (!error) {
+                        console.log(`Data Badse email ${result[0]}`)
+                        resolve(result[0]);
+                    } else {
+                        reject(error);
+                    }
+                });
+            }
+            else
+            if(user_type === "client"){
+                db.query("SELECT * FROM users_info WHERE email = ?", [email], (error, result) => {
+                    if (!error) {
+                        console.log(`Data Badse email ${result[0]}`)
+                        resolve(result[0]);
+                    } else {
+                        reject(error);
+                    }
+                });
+            }
+         
         });
     }
     
