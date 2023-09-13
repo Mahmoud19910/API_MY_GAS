@@ -1,5 +1,7 @@
 import express from "express";
 import db from "../db.js"
+import { resolve } from "path";
+import { error } from "console";
 
 class UsersModle{
 
@@ -239,6 +241,22 @@ class UsersModle{
 
           
         });
+    }
+
+    // تعديل بيانات المستخدم
+    static async updateClientInfo(name , image , phone , email , id){
+
+        return new Promise((resolve , reject)=>{
+
+            db.query("UPDATE users_info SET name=? , image=? , phone=? , email=? WHERE id=?" , [name , image , phone , email , id] , (error , result)=>{
+
+                if(!error){
+                    resolve(result)
+                }else{
+                    reject(error)
+                }
+            })
+        })
     }
 
     // static async updateVerifyCode(verificationCode , email){

@@ -2,7 +2,15 @@ import { error } from "console";
 import clientModle from "../modles/client.js"
 class ClientController{
 
+    static setIO(io){
+        ClientController.io = io;
+    }
+
+    // انشاء طلب جديد
     static async newOrder(request, response) {
+
+        const io = ClientController.io;
+
         const {
           client_name,
           client_lat_location,
@@ -17,7 +25,10 @@ class ClientController{
           packing_quantity,
           total_fill_price,
           company_name,
-          order_date
+          company_id,
+          order_date,
+          client_id,
+          sender_image
         } = request.body;
       
         // Check if any of the required fields are null or empty
@@ -39,7 +50,9 @@ class ClientController{
                 !packing_quantity ||
                 !total_fill_price ||
                 !company_name ||
-                !order_date
+                !company_id ||
+                !order_date ||
+                !client_id 
               ) {
                 // Respond with an error status code and message
                 response.status(401).json({
@@ -93,25 +106,50 @@ class ClientController{
                     order_date,
                     total_price,
                     company_lat_location,
-                    company_long_location);
+                    company_long_location,
+                    company_id ,
+                    client_id , 
+                    0 , // الوقت المقدر لوصول الطلب
+                    sender_image	);
       
                   if(result){
-                      response.status(200).json(result)
+                    response.status(200).json({
+                        "status":true,
+                        "message":"Success Add Order",
+                        "data":null
+                     });
+
+                      io.on("connection" , (socket)=>{
+                        console.log(socket.handshake.query.userName)
+
+                        
+                        io.emit(`${company_id}` , {
+                            "client_name": client_name,
+                            "phone_num": phone_num,
+                        })
+                      })
+
                   }else{
-                      response.send("error")
-                  }
+                    response.status(401).json({
+                        "status":false,
+                        "message":error,
+                        "data":result
+                     });                  }
 
       
               }
 
         }catch(error){
-            response.send(error);
-
+            response.status(500).json({
+                "status":false,
+                "message":error,
+                "data":result
+             });
         }
 
       }
      
-      
+      // جلب تفاصيل الطلب عن طريق id
       static async getOrderById(request , response){
         const order_num = request.params.order_num; // Access the specific
         console.log("Order Num  "+ order_num)
@@ -121,7 +159,7 @@ class ClientController{
 
             try{
 
-                if(result){
+                if(result && result.length > 0){
                     response.status(200).json({
                         "status":true,
                         "message":"Success",
@@ -144,6 +182,150 @@ class ClientController{
             }
         }
       }
+
+      // جلب تفاصيل الطلب ل العميل
+      static async getClientorderByID(request  , response){
+
+        const client_id = request.params.client_id;
+
+        if(client_id){
+
+           const result  = await clientModle.getOrderClientbyIdFromDataBase(client_id);
+
+           try{
+
+            if(result && result.length > 0){
+                response.status(200).json({
+                    "status":true,
+                    "message":"Success",
+                    "data":result
+                 });
+            }
+           }catch(error){
+            response.status(401).json({
+                "status":false,
+                "message":"Un Success",
+                "data":error
+             });
+           }
+        }else{
+            response.status(500).json({
+                "status":false,
+                "message":"Un Success",
+                "data":error
+             });
+        }
+
+      }
+
+      // جلب جميع الطلبات
+      static async getAllOrder(request , response){
+        try{
+            const result = await clientModle.getAllOrderFromDataBase();
+
+            if(result && result.length > 0){
+                response.status(200).json({
+                    "status":true,
+                    "message":"Success",
+                    "data":result
+                 });
+            }else{
+                response.status(401).json({
+                    "status":false,
+                    "message":"Un Success",
+                    "data":null
+                 });
+            }
+        }catch(error){
+            response.status(500).json({
+                "status":false,
+                "message":"Un Success",
+                "data":null
+             });
+        }
+      }
+
+      static async getAllUsersINChat(request, response) {
+        const jsonList = [];
+        try {
+    
+            const result = await clientModle.getAllUsersChat();
+    
+            if (result) {
+                for (let i = 0; i < result.length; i++) {
+                    let isRepeated = false;
+    
+                    for (let e = 0; e < jsonList.length; e++) {
+                        if (
+                            result[i].sender_id === jsonList[e].sender_id &&
+                            result[i].receiver_id === jsonList[e].receiver_id
+                        ) {
+                            isRepeated = true;
+                            break;
+                        }
+                    }
+    
+                    if (!isRepeated) {
+                        jsonList.push(result[i]);
+                    }
+                }
+    
+                response.status(200).json({
+                    "status": true,
+                    "message": "Success",
+                    "data": jsonList
+                });
+            } else {
+                response.status(401).json({
+                    "status": false,
+                    "message": "Unsuccessful",
+                    "data": null
+                });
+            }
+        } catch (error) {
+            response.status(500).json({
+                "status": false,
+                "message": "Internal Server Error",
+                "data": error
+            });
+        }
+    }
+
+    static async getMessagesById(request , response){
+
+        try{
+
+            const {sender_id , reciver_id , reciver_type } = request.body
+            const result = await clientModle.getAllmessagesById(sender_id , reciver_id ,  reciver_type);
+
+            if(result){
+                response.status(200).json({
+                    "status": true,
+                    "message": "Success",
+                    "data": result
+                })
+            }else{
+                response.status(401).json({
+                    "status": false,
+                    "message": "Un Success",
+                    "data": null
+                })
+            }
+        }catch(error){
+
+            response.status(500).json({
+                "status": true,
+                "message": error,
+                "data": null
+            })
+
+        }
+
+    }
+    
+    
+
+
 
 }
 export default ClientController;

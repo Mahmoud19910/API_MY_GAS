@@ -14,12 +14,15 @@ let verificationCode = '';
 
 class Userscontroller{
 
+
     // جلب جميع المستخدمين
     static async getClient(request , response){
 
-        
+
             const result = await usersModle.getClientUsers();
             if(result){
+
+            
             //   companyAccount = result.filter((item)=> item.user_type === "company");
 
                 // if(result.user_type === "company"){
@@ -522,6 +525,45 @@ static async updatePassowrd(request , response){
     
 
 
+}
+
+static async updateUserInfo(request , response){
+
+    try{
+
+        const {name , image , phone , email , id} = request.body;
+
+    if(id){
+   const result = await usersModle.updateClientInfo(name , image , phone , email , id);
+   if(result){
+    response.status(200).json({
+        "status": true,
+        "message": "Success Update User Info",
+        "data": null
+      });
+    }else{
+        response.status(401).json({
+            "status": false,
+            "message": "Un Success",
+            "data": null
+          });
+    }
+    }else{
+        response.status(400).json({
+            "status": false,
+            "message": "Un Success",
+            "data": null
+          });
+    }
+
+    }catch(error){
+        response.status(500).json({
+            "status": false,
+            "message": error,
+            "data": null
+          });
+    }
+    
 }
 
 

@@ -19,6 +19,9 @@ userExpress.post("/checkEmailVerify" , userController.checkTheCodeIsVerified);
 userExpress.post("/reSendVerificationCode" , userController.reSendverificationCode);
 userExpress.post("/updatePassword" , userController.updatePassowrd);
 
+userExpress.put("/updateUserinfo" , userController.updateUserInfo);
+
+
 
 
 export default userExpress
