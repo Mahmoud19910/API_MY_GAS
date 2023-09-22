@@ -116,7 +116,7 @@ class Userscontroller{
 
 // تسجيل عميل جديد
 static async addClientAccount(request, response) {
-    const { name, user_type, email, pass } = request.body;
+    const { name, user_type, email, pass , address , client_lat_location , client_long_location} = request.body;
 
     try{
  // Check email format
@@ -157,7 +157,7 @@ static async addClientAccount(request, response) {
         //  });
 
        
-         const result = await usersModle.addClient( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass , verificationCode);
+         const result = await usersModle.addClient( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass , verificationCode , address , client_lat_location , client_long_location);
 
          if (result) {
                  response.status(200).json({
@@ -400,7 +400,7 @@ static async addDriverAccount(request, response) {
 // }
 
 static async addCompanyAccount(request, response) {
-    const { name, user_type, email, pass , company_registration_number , phone , lat_location , long_location} = request.body;
+    const { name, user_type, email, pass , company_registration_number , phone , lat_location , long_location , address} = request.body;
 
     try{
  // Check email format
@@ -412,7 +412,7 @@ static async addCompanyAccount(request, response) {
 
     // Generate a random 6-digit verification code
     verificationCode = Math.floor(100000 + Math.random() * 900000);
- const result = await usersModle.addCompany( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass  , company_registration_number  , phone , lat_location , long_location , verificationCode);
+ const result = await usersModle.addCompany( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass  , company_registration_number  , phone , lat_location , long_location , verificationCode , address);
 
  if (result) {
     // اذا تمت العملية بنجاح يتم توليد رقم تحقق و ارساله للايميل المدخل من قبل المستخدم
@@ -461,56 +461,47 @@ static async addCompanyAccount(request, response) {
 
 
 // تسجيل الدخول
-static async loginUserByEmailPass(request , response){
-        const { email, pass , user_type } = request.body;
+static async loginUserByEmailPass(request, response) {
+    const { email, pass, user_type } = request.body;
+    const userType= user_type.toLowerCase();
 
-        try {
+    try {
+        if (userType === "company" || userType === "client" || userType === "driver") {
+            const user = await usersModle.loginUsersByEmailPass(email, pass, userType);
 
-            if(user_type === "company" || user_type === "client" || user_type === "driver"){
-
-                const user = await usersModle.loginUsersByEmailPass(email, pass , user_type);
-                console.log("User Object:", request.status); // Debug: Check user object
-                console.log("User type  :"+ user.user_type)
-                if (user !== null) {
-                    console.log("Data Base :", user.email); // Moved inside the if condition
-                    response.status(200).json({
-                        "status": true,
-                        "message": "Success Login",
-                        "data": user.user_type.toString()
-                      });
-                }
-                else
-                 {
-                    response.status(404).json({
-                        "status": false,
-                        "message": "Un Success Login",
-                        "data": null
-                      });
-                }
-
-            }else{
-
+            if (user !== null) {
                 response.status(200).json({
                     "status": true,
-                    "message": "Incorrect pass or email or user type",
+                    "message": "Success Login",
+                    "data": user
+                });
+            } else {
+                response.status(404).json({
+                    "status": false,
+                    "message": "Un Success Login",
                     "data": null
-                  });
-
+                });
             }
-           
-          } catch (error) {
-           // Handle any errors that occur during the asynchronous operation
-  console.error("Error:", error);
+        } else {
+            response.status(200).json({
+                "status": true,
+                "message": "Incorrect pass or email or user type",
+                "data": null
+            });
+        }
+    } catch (error) {
+        // Handle any errors that occur during the asynchronous operation
+        console.error("Error:", error);
 
-  // Return a 401 status if there was an error related to authentication
-//   response.status(401).send("Incorrect pass or email");
-  response.status(401).json({
-    "status": false,
-    "message": "Incorrect pass or email",
-    "data": null
-  });
-          }
- }
+        // Return a 401 status if there was an error related to authentication
+        response.status(401).json({
+            "status": false,
+            "message": "Incorrect pass or email",
+            "data": null
+        });
+    }
+}
+
 
 
 // اعادة ارسال رمز التحقق بعد ٦٠ دقيقة
@@ -661,6 +652,7 @@ static async updateUserInfo(request , response){
 
     if(id){
    const result = await usersModle.updateClientInfo(name , image , phone , email , id);
+   console.log(result)
    if(result){
     response.status(200).json({
         "status": true,
@@ -690,6 +682,99 @@ static async updateUserInfo(request , response){
           });
     }
     
+}
+
+static async updateCompanyInfo(request , response){
+
+    try{
+       const {company_name , email , image , address , company_registration_number , id}= request.body;
+
+    const result = await usersModle.updateCompany(image , company_registration_number  , address , email , company_name , id);
+
+    if(result){
+        response.status(200).json({
+            "status": true,
+            "message": "Success Update",
+            "data": result
+          });
+    }else{
+        response.status(401).json({
+            "status": false,
+            "message": "Un Success Update",
+            "data": null
+          });
+    }
+
+
+    }catch(error){
+        response.status(500).json({
+            "status": false,
+            "message": error,
+            "data": null
+          });
+    }
+}
+
+static async upDateClientlocation(request , response){
+    const {lat_client , long_client , address , id} = request.body;
+
+    try{
+    const result = await usersModle.updateClientlocation(lat_client , long_client , address , id);
+
+    if(result){
+        response.status(200).json({
+            "status": true,
+            "message": "Success Update",
+            "data": result
+          });
+    }else{
+        response.status(401).json({
+            "status": false,
+            "message": "Un Success Update",
+            "data": null
+          });
+    }
+
+
+    }catch(error){
+        response.status(500).json({
+            "status": false,
+            "message": error,
+            "data": null
+          });
+    }
+
+}
+
+static async upDateDriverlocation(request , response){
+    const {lat_client , long_client , id} = request.body;
+
+    try{
+    const result = await usersModle.updateDriverlocation(lat_client , long_client  , id);
+
+    if(result){
+        response.status(200).json({
+            "status": true,
+            "message": "Success Update",
+            "data": result
+          });
+    }else{
+        response.status(401).json({
+            "status": false,
+            "message": "Un Success Update",
+            "data": null
+          });
+    }
+
+
+    }catch(error){
+        response.status(500).json({
+            "status": false,
+            "message": error,
+            "data": null
+          });
+    }
+
 }
 
 

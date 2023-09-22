@@ -1,5 +1,8 @@
 import { error } from "console";
 import clientModle from "../modles/client.js"
+import usermodle from "../modles/users.js"
+
+
 class ClientController{
 
     static setIO(io){
@@ -8,6 +11,7 @@ class ClientController{
 
     // انشاء طلب جديد
     static async newOrder(request, response) {
+        let result = null;
 
         const io = ClientController.io;
 
@@ -28,7 +32,9 @@ class ClientController{
           company_id,
           order_date,
           client_id,
-          sender_image
+          sender_image,
+          client_address ,
+          company_address
         } = request.body;
       
         // Check if any of the required fields are null or empty
@@ -52,7 +58,9 @@ class ClientController{
                 !company_name ||
                 !company_id ||
                 !order_date ||
-                !client_id 
+                !client_id ||
+                !client_address ||
+                !company_address
               ) {
                 // Respond with an error status code and message
                 response.status(401).json({
@@ -90,7 +98,7 @@ class ClientController{
                 const total_price	= total_buy_price + total_fill_price;
                 const order_status = "waiting";
       
-                const result = await clientModle.addOrderToDataBase( client_name,
+                 result = await clientModle.addOrderToDataBase( client_name,
                     client_lat_location,
                     client_long_location,
                     phone_num,
@@ -110,7 +118,9 @@ class ClientController{
                     company_id ,
                     client_id , 
                     0 , // الوقت المقدر لوصول الطلب
-                    sender_image	);
+                    sender_image , 
+                    client_address , 
+                    company_address);
       
                   if(result){
                     response.status(200).json({
@@ -119,27 +129,51 @@ class ClientController{
                         "data":null
                      });
 
-                      io.on("connection" , (socket)=>{
-                        console.log(socket.handshake.query.userName)
+
+                     io.on('connection', (socket) => {
+                        console.log('User connected');
+                      
+                        // Listen for chat messages
+                        socket.on(`notification${company_id}` , (msg) => {
+                          io.emit(`notification${company_id}`, msg); // Broadcast the message to all connected clients
+                        });
+                      
+                        // Listen for disconnections
+                        socket.on('disconnect', () => {
+                          console.log('User disconnected');
+                        });
+                      });
+
+                      
+                    //   io.on("connection" , (socket)=>{
+                    //     console.log(socket.handshake.query.userName)
+
 
                         
-                        io.emit(`${company_id}` , {
-                            "client_name": client_name,
-                            "phone_num": phone_num,
-                        })
-                      })
+                    //     io.emit(`${company_id}` , {
+                    //         "client_name": client_name,
+                    //         "phone_num": phone_num,
+                    //     })
+                    //   })
 
                   }else{
+                    console.log("this Error")
                     response.status(401).json({
                         "status":false,
                         "message":error,
                         "data":result
-                     });                  }
+                     });        
+                              }
 
       
               }
 
         }catch(error){
+
+             // You can still access the result variable here if needed
+    console.error("Error:", error);
+    console.log(`Error  ${error}`);
+
             response.status(500).json({
                 "status":false,
                 "message":error,
@@ -186,8 +220,8 @@ class ClientController{
       // جلب تفاصيل الطلب ل العميل
       static async getClientorderByID(request  , response){
 
-        const client_id = request.params.client_id;
-
+        const client_id = request.query.client_id;
+        console.log(client_id)
         if(client_id){
 
            const result  = await clientModle.getOrderClientbyIdFromDataBase(client_id);
@@ -245,58 +279,125 @@ class ClientController{
         }
       }
 
-      static async getAllUsersINChat(request, response) {
-        const jsonList = [];
-        try {
+    //   static async getAllUsersINChat(request, response) {
+    //     const jsonList = [];
+    //     try {
     
+    //         const result = await clientModle.getAllUsersChat();
+    
+    //         if (result) {
+    //             for (let i = 0; i < result.length; i++) {
+    //                 let isRepeated = false;
+    
+    //                 for (let e = 0; e < jsonList.length; e++) {
+    //                     if (
+    //                         result[i].sender_id === jsonList[e].sender_id &&
+    //                         result[i].receiver_id === jsonList[e].receiver_id 
+    //                     ) {
+    //                         isRepeated = true;
+    //                         break;
+    //                     }
+    //                 }
+    
+    //                 if (!isRepeated && result[i].sender_type === "company" || result[i].sender_type === "driver"  && result[i].reciver_type === "client") {
+                     
+    //                     if(result[i].sender_id !== 142775268){
+    //                         const result2 = await usermodle.getUserById(result[i].sender_id , result[i].sender_type);
+    //                         jsonList.push(result2);
+
+    //                         // for(let x=0 ; x<result2.length ; x++){
+
+    //                         //     for(let f=0 ; f<jsonList.length ; f++){
+    //                         //         if(result2[x].id !== jsonList[f].id){
+    //                         //         }
+    //                         //     }
+    //                         // }
+    //                     }
+                        
+    //                 }
+    //             }
+    
+    //             response.status(200).json({
+    //                 "status": true,
+    //                 "message": "Success",
+    //                 "data": jsonList
+    //             });
+    //         } else {
+    //             response.status(401).json({
+    //                 "status": false,
+    //                 "message": "Unsuccessful",
+    //                 "data": null
+    //             });
+    //         }
+    //     } catch (error) {
+    //         response.status(500).json({
+    //             "status": false,
+    //             "message": "Internal Server Error",
+    //             "data": error
+    //         });
+    //     }
+    // }
+
+    static async getAllUsersINChat(request, response) {
+        const client_id = Number(request.query.client_id);
+        const uniqueUsers = new Set();
+        const finalUserList = [];
+        try {
             const result = await clientModle.getAllUsersChat();
     
             if (result) {
                 for (let i = 0; i < result.length; i++) {
-                    let isRepeated = false;
+                    if (
+                        (result[i].sender_id === client_id || result[i].reciver_id === client_id) &&
+                        (result[i].sender_type === "client" || result[i].reciver_type === "client")
+                    ) {
+                        const userId = result[i].sender_id === client_id ? result[i].reciver_id : result[i].sender_id;
+                        const userType = result[i].sender_id === client_id ? result[i].reciver_type : result[i].sender_type;
     
-                    for (let e = 0; e < jsonList.length; e++) {
-                        if (
-                            result[i].sender_id === jsonList[e].sender_id &&
-                            result[i].receiver_id === jsonList[e].receiver_id
-                        ) {
-                            isRepeated = true;
-                            break;
-                        }
-                    }
+                        // Create a unique user key based on user ID and user type
+                        const userKey = `${userId}-${userType}`;
     
-                    if (!isRepeated) {
-                        jsonList.push(result[i]);
+                        // Add the user to the Set if it's unique
+                        uniqueUsers.add(userKey);
                     }
                 }
     
+                // Iterate through unique user keys and retrieve user information
+                for (const userKey of uniqueUsers) {
+                    const [userId, userType] = userKey.split('-');
+                    const user = await usermodle.getUserById(userId, userType);
+                    finalUserList.push(user);
+                }
+
+            
+    
                 response.status(200).json({
-                    "status": true,
-                    "message": "Success",
-                    "data": jsonList
+                    status: true,
+                    message: "Success",
+                    data: finalUserList,
                 });
             } else {
                 response.status(401).json({
-                    "status": false,
-                    "message": "Unsuccessful",
-                    "data": null
+                    status: false,
+                    message: "Unsuccessful",
+                    data: null,
                 });
             }
         } catch (error) {
             response.status(500).json({
-                "status": false,
-                "message": "Internal Server Error",
-                "data": error
+                status: false,
+                message: "Internal Server Error",
+                data: error,
             });
         }
     }
-
+    
     static async getMessagesById(request , response){
 
         try{
 
-            const {sender_id , reciver_id ,sender_type , reciver_type } = request.body
-            const result = await clientModle.getAllmessagesById(sender_id , reciver_id ,  reciver_type , sender_type) ;
+            const {sender_id , reciver_id ,user_type } = request.body
+            const result = await clientModle.getAllmessagesById(Number(sender_id) , Number(reciver_id) ,  user_type) ;
 
             if(result){
                 response.status(200).json({
@@ -321,6 +422,128 @@ class ClientController{
 
         }
 
+    }
+
+    static async deleteMessageById(request , response){
+        const id = Number(request.params.id);
+
+        try{
+            const result = await clientModle.deleteMessageByIdFromDataBase(id);
+
+            if(result){
+                response.status(200).json({
+                    status: true,
+                    message: "Success Delete ",
+                    data: null,
+                });
+            }else{
+                response.status(401).json({
+                    status: false,
+                    message: "Un Success Delete ",
+                    data: null,
+                });  
+            }
+        }catch(error){
+            response.status(500).json({
+                status: false,
+                message: error,
+                data: null,
+            });  
+        }
+     
+    }
+
+    static async sendMessage(request , response){
+
+        const io = ClientController.io;
+
+        const currentTime = new Date();
+        const hours = currentTime.getHours();
+        const minutes = currentTime.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+       // Convert hours from 24-hour format to 12-hour format
+       const formattedHours = hours % 12 || 12;
+      const timeString = `${formattedHours}:${minutes < 10 ? '0' : ''}${minutes} ${ampm}`;
+
+        try{
+            const {message , sender_id , reciver_id , sender_type , reciver_type} = request.body;
+           const result = await clientModle.sendMessage(message , sender_id , reciver_id , sender_type , reciver_type , timeString);
+           const senderUser = await usermodle.getUserById(sender_id , "client");
+
+           console.log(result)
+           if(result && senderUser){
+            response.status(200).json({
+                status: true,
+                message: "Success Send",
+                data: null,
+            });
+
+
+            // WebSocket event handling
+    io.on('connection', (socket) => {
+    console.log('User connected');
+  
+    console.log("Reciver Why Null")
+    console.log(reciver_id);
+    // Listen for chat messages
+    socket.on(`${reciver_id}` , (msg) => {
+      io.emit(`${reciver_id}`, msg); // Broadcast the message to all connected clients
+    });
+  
+    // Listen for disconnections
+    socket.on('disconnect', () => {
+      console.log('User disconnected');
+    });
+  });
+           
+              
+           }else{
+            response.status(401).json({
+                status: false,
+                message: "Un Success Send The Message ",
+                data: null,
+            });
+           }
+
+        }catch(error){
+            response.status(500).json({
+                status: false,
+                message: error,
+                data: null,
+            });
+        }
+
+    }
+
+
+    static async evaluationsDriver(request , response)
+    {
+        const {evaluations , id} = request.body;
+        try{
+            const result = await clientModle.evaluationDriverById(evaluations , id);
+
+            if(result){
+                response.status(200).json({
+                    status: true,
+                    message: "Success Evaluate ",
+                    data: null,
+                });
+            }else{
+                response.status(401).json({
+                    status: false,
+                    message: "Un Success Evaluate ",
+                    data: null,
+                });
+            }
+        }catch(error){
+
+            response.status(500).json({
+                status: false,
+                message:error,
+                data: null,
+            });
+        }
+      
     }
     
     

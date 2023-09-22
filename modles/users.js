@@ -2,6 +2,7 @@ import express from "express";
 import db from "../db.js"
 import { resolve } from "path";
 import { error } from "console";
+import { rejects } from "assert";
 
 class UsersModle{
 
@@ -53,10 +54,10 @@ class UsersModle{
     }
 
     // انشا حساب عميل 
-    static async addClient(id , name , user_type , email , pass , verificationCode){
+    static async addClient(id , name , user_type , email , pass , verificationCode , address , client_lat_location , client_long_location){
         return new Promise((resolve , reject)=>{
 
-            db.query("insert into users_info (id , name , user_type , email , pass , verificationCode , phone , image ) values (?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , verificationCode , "" , ""] , (error , result)=>{
+            db.query("insert into users_info (id , name , user_type , email , pass , verificationCode , phone , image , client_address , client_lat_location , client_long_location) values (?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , verificationCode , "" , "" , address , client_lat_location , client_long_location] , (error , result)=>{
                 if(!error){
                     resolve(result);
                 }else{
@@ -70,7 +71,7 @@ class UsersModle{
     static async addDriver(id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location){
         return new Promise((resolve , reject)=>{
 
-            db.query("insert into driver_account (id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location , evaluations , orders_number , image) values (?,?,?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location , 0 , 0 , ""] , (error , result)=>{
+            db.query("insert into driver_account (id , driver_name , user_type , email , pass , verificationCode , vehicle_number , phone ,  driver_lat_location , driver_long_location , evaluations , orders_number , image) values (?,?,?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location , 0 , 0 , ""] , (error , result)=>{
                 if(!error){
                     resolve(result);
                 }else{
@@ -81,10 +82,10 @@ class UsersModle{
     }
 
     // انشا حساب شركة 
-    static async addCompany(id , name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode){
+    static async addCompany(id , name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode , address){
         return new Promise((resolve , reject)=>{
 
-            db.query("insert into  company_account (id , name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode , evaluations , orders_number , image) values (?,?,?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , company_registration_number , phone ,  lat_location , long_location , verificationCode , 0 , 0 ,""] , (error , result)=>{
+            db.query("insert into  company_account (id , company_name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode , evaluations , orders_number , image , address) values (?,?,?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , company_registration_number , phone ,  lat_location , long_location , verificationCode , 0 , 0 ,"" , address] , (error , result)=>{
                 if(!error){
                     resolve(result);
                 }else{
@@ -99,7 +100,7 @@ class UsersModle{
         
             if(user_type === "client"){
                 db.query(
-                    "SELECT user_type FROM users_info WHERE email = ? AND pass = ?",
+                    "SELECT * FROM users_info WHERE email = ? AND pass = ?",
                     [email, pass],
                     (error, result) => {
                       console.log('error : '+error+', result : '+result)
@@ -117,7 +118,7 @@ class UsersModle{
             else
             if(user_type === "company"){
                 db.query(
-                    "SELECT user_type FROM company_account WHERE email = ? AND pass = ?",
+                    "SELECT * FROM company_account WHERE email = ? AND pass = ?",
                     [email, pass],
                     (error, result) => {
                       if (!error && result.length > 0) {
@@ -136,7 +137,7 @@ class UsersModle{
             else
             if(user_type === "driver"){
                 db.query(
-                    "SELECT user_type FROM driver_account WHERE email = ? AND pass = ?",
+                    "SELECT * FROM driver_account WHERE email = ? AND pass = ?",
                     [email, pass],
                     (error, result) => {
                       console.log('error : '+error+', result : '+result)
@@ -286,6 +287,125 @@ class UsersModle{
         })
     }
 
+    static async updateClientlocation(lat_client , long_client , address , id){
+
+        return new Promise((resolve , reject)=>{
+
+            db.query("UPDATE users_info SET client_address=? , client_lat_location=? , client_long_location=? WHERE id=?" , [lat_client , long_client , address , id] , (error , result)=>{
+
+                if(!error){
+                    resolve(result)
+                }else{
+                    reject(error)
+                }
+            })
+        })
+    }
+
+    static async getUserById(id , user_type){
+        return new Promise((resolve , reject)=>{
+            
+            if(user_type === "driver"){
+
+                db.query("SELECT driver_name , id , user_type FROM driver_account WHERE id=?" , [id] , (error , result)=>{
+                    if(!error){
+                        resolve(result)
+                    }else{
+                        reject(error)
+                    }
+                })
+                
+            }
+            else
+            if(user_type === "company"){
+
+                db.query("SELECT company_name , id , user_type FROM company_account WHERE id=?" , [id] , (error , result)=>{
+                    if(!error){
+                        resolve(result)
+                    }else{
+                        reject(error)
+                    }
+                })
+            }
+            else
+            if(user_type === "client"){
+
+                db.query("SELECT name , id , user_type FROM users_info WHERE id=?" , [id] , (error , result)=>{
+                    if(!error){
+                        resolve(result)
+                    }else{
+                        reject(error)
+                    }
+                })
+            }else{
+                
+            }
+        })
+    }
+
+    static async getUserFromchatandDriverById(id , user_type){
+        return new Promise((resolve , reject)=>{
+            
+            if(user_type === "driver"){
+
+                db.query("SELECT chat.*, driver_account.* FROM chat INNER JOIN driver_account ON chat.sender_id = ? OR chat.reciver_id = ? WHERE chat.sender_id = ? OR chat.reciver_id = ? LIMIT 0, 25;" , [id , id , id , id] , (error , result)=>{
+                    if(!error){
+                        resolve(result)
+                    }else{
+                        reject(error)
+                    }
+                })
+
+            }
+            else
+            if(user_type === "company"){
+
+                db.query("SELECT chat.*, company_account.* FROM chat INNER JOIN company_account ON chat.sender_id = ? OR chat.reciver_id = ? WHERE chat.sender_id = ? OR chat.reciver_id = ? LIMIT 0, 25;" , [id , id , id , id] , (error , result)=>{
+                    if(!error){
+                        resolve(result)
+                    }else{
+                        reject(error)
+                    }
+                })
+            }
+            else
+            {
+
+            }
+        })
+    }
+
+    static async updateCompany(image , recordNum , address , email , name , id){
+
+        return new Promise((resolve , reject)=>{
+
+            db.query("UPDATE company_account SET image=? , company_registration_number=?	, address=? , email=? , company_name=? WHERE id=?" ,
+             [image , recordNum , address  , email , name , id] ,(error , result)=>{
+
+                if(!error){
+
+                    resolve(result)
+                }else{
+                    reject(error)
+                }
+            })
+        })
+    }
+
+    static async updateDriverlocation(lat_client , long_client  , id){
+
+        return new Promise((resolve , reject)=>{
+
+            db.query("UPDATE driver_account SET  driver_lat_location=? , driver_long_location=? WHERE id=?" , [lat_client , long_client , id] , (error , result)=>{
+
+                if(!error){
+                    resolve(result)
+                }else{
+                    reject(error)
+                }
+            })
+        })
+    }
     // static async updateVerifyCode(verificationCode , email){
     //     return new Promise ((resolve , reject)=>{
     //         db.query("UPDATE users_info SET verificationCode=? WHERE email=?" , [verificationCode , email] , (error , result)=>{

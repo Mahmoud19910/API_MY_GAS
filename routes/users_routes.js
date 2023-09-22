@@ -20,6 +20,10 @@ userExpress.post("/reSendVerificationCode" , userController.reSendverificationCo
 userExpress.post("/updatePassword" , userController.updatePassowrd);
 
 userExpress.put("/updateUserinfo" , userController.updateUserInfo);
+userExpress.put("/updateCompanyInfo" , userController.updateCompanyInfo);
+userExpress.put("/updateClientLocation" , userController.upDateClientlocation);
+
+
 
 
 
