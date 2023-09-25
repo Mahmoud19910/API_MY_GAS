@@ -2,6 +2,10 @@ import express, { query } from "express";
 import db from "../db.js";
 class Company{
 
+  static setIo(io){
+    Company.io=io;
+}
+
     static async addNewService(serviceName , quantity , price_Per_Unit){
         return new Promise((resolve ,reject)=>{
 
@@ -41,8 +45,11 @@ class Company{
 
             if(!error){
 
+              console.log(result)
               resolve(result)
             }else{
+              console.log(error)
+
               reject(error)
             }
           })
@@ -116,6 +123,7 @@ class Company{
       //     }
           
       static async updateOrder_AcceptORCancelOrder(order_num , order_status , company_id , res){
+        const io = Company.io;
 
         let latClient=0;
         let longClient=0;
@@ -126,7 +134,6 @@ class Company{
         return new Promise((resolve ,  reject)=>{
           
           if(order_status.toLowerCase() === "accept"){
-
             console.log("ACCEPT")
             db.query("SELECT accepted_order_num FROM company_account WHERE id=?", [company_id], (error, result) => {
               if (error) {
@@ -140,16 +147,16 @@ class Company{
                 const incrementAcceptedOrder = row.accepted_order_num + 1;
 
                  // سوف يتم حساب الطلبات المقبولة من طرف السائق عند قبول الطلب
-                // // Update the company's orders_number
-                // db.query("UPDATE company_account SET accepted_order_num=? WHERE id=?", [incrementAcceptedOrder, company_id], (updateError, updateResult) => {
-                //   if (!updateError) {
-                //     resolve(updateResult); // Resolve with the update result
-                //   } else {
-                //     console.log(`ERROR3   ${updateError}`)
+                // Update the company's orders_number
+                db.query("UPDATE company_account SET accepted_order_num=? WHERE id=?", [incrementAcceptedOrder, company_id], (updateError, updateResult) => {
+                  if (!updateError) {
+                    resolve(updateResult); // Resolve with the update result
+                  } else {
+                    console.log(`ERROR3   ${updateError}`)
 
-                //     reject(updateError); // Reject if there's an error during the update
-                //   }
-                // });
+                    reject(updateError); // Reject if there's an error during the update
+                  }
+                });
               }
             }); 
 
@@ -304,7 +311,7 @@ class Company{
                               });
 
 
-                                // اشعار طلب للشركة
+                                //  اشعار طلب للشركة الجديدة
                                 db.query("INSERT INTO app_notifications (	sender_image , client_name , reciver_id , content , time , sender_id) VALUES (? ,? ,? ,? ,? ,?)",
                                  [clientImage , clientName , companyId ,  ` طلب ${filling_cylinder} \n ${buy_cylinder}` , timeString , clientId  ]
                                  ,(error , result)=>{
@@ -344,23 +351,23 @@ class Company{
                           );
 
                            // سوف يتم حساب الطلبات المرفوضة من طرف السائق عند رفض الطلب
-                          // db.query("UPDATE company_account SET rejected_order_num=? WHERE id=?" , [rejected_order_num , companyId],(error , result)=>{
-                          //   if(!error){
-                          //     console.log(`RESULT  : ${result}`)
-                          //     resolve(result)
-                          //   }else{
-                          //     reject(error)
-                          //     console.log(`ERRORS  : ${error}`)
-                          //   }
-                          // })
+                          db.query("UPDATE company_account SET rejected_order_num=? WHERE id=?" , [rejected_order_num , companyId],(error , result)=>{
+                            if(!error){
+                              console.log(`RESULT  : ${result}`)
+                              resolve(result)
+                            }else{
+                              reject(error)
+                              console.log(`ERRORS  : ${error}`)
+                            }
+                          })
 
-                        //   const currentTime = new Date();
-                        //   const hours = currentTime.getHours();
-                        //   const minutes = currentTime.getMinutes();
-                        //   const ampm = hours >= 12 ? 'PM' : 'AM';
-                        //  // Convert hours from 24-hour format to 12-hour format
-                        //  const formattedHours = hours % 12 || 12;
-                        // const timeString = `${formattedHours}:${minutes < 10 ? '0' : ''}${minutes} ${ampm}`;   
+                          const currentTime = new Date();
+                          const hours = currentTime.getHours();
+                          const minutes = currentTime.getMinutes();
+                          const ampm = hours >= 12 ? 'PM' : 'AM';
+                         // Convert hours from 24-hour format to 12-hour format
+                         const formattedHours = hours % 12 || 12;
+                        const timeString = `${formattedHours}:${minutes < 10 ? '0' : ''}${minutes} ${ampm}`;   
 
 
                         //   // حفظ اشعار جديد 
@@ -484,9 +491,9 @@ class Company{
         })
       }
 
-      static async deleteDriverById(id) {
+      static async deleteDriverById(driverId) {
         return new Promise((resolve, reject) => {
-          db.query("DELETE FROM company_drivers WHERE id=?", [id], (error, result) => {
+          db.query("DELETE FROM company_drivers WHERE driver_id=?", [driverId], (error, result) => {
             if (!error) {
               resolve(result);
             } else {
@@ -565,15 +572,63 @@ class Company{
               }
             });
 
-            
+              // ارسال رسالة للسائق عند ارسال طللب
+              db.query("INSERT INTO chat (sender_id , reciver_id  , message	 , created_at , updated_at , sender_type , reciver_type) VALUES (? , ? , ? , ? ,? , ? , ?)" , [company_id , driver_id , `طلب ${row.filling_cylinder}  \n ${row.buy_cylinder} \n من شركة ${row.company_name}` , timeString , "" , "company" , "driver"] , (error , result)=>{
+
+                if(!error){
+                    resolve(result)
+                }else{
+                    reject(error)
+                }
+            })
 
            }else{
              reject(error)
            }
           })
 
+
+          // Assuming you have a database connection called 'db'
+
+// Get the current orders_number for the company
+db.query("SELECT driver_orders_number FROM driver_account WHERE id=?", [driver_id], (error, result) => {
+  if (error) {
+    reject(error); // Reject if there's an error
+  } else if (result.length === 0) {
+    reject(new Error("Company not found")); // Reject if company not found
+  } else {
+    const row = result[0];
+    const incrementOrder = row.driver_orders_number + 1;
+
+    // Update the company's orders_number
+    db.query("UPDATE driver_account SET driver_orders_number=? WHERE id=?", [incrementOrder, driver_id], (updateError, updateResult) => {
+      if (!updateError) {
+        resolve(updateResult); // Resolve with the update result
+      } else {
+        reject(updateError); // Reject if there's an error during the update
+      }
+    });
+  }
+});
+
         })
       }
+
+      static async getAllCompanyNotificationById(companyId){
+        return new Promise((resolve , reject)=>{
+            db.query(
+                `SELECT * FROM app_notifications WHERE reciver_id=?`,
+                [companyId],
+                (error , result)=>{
+                    if(!error){
+                        resolve(result);
+                    }else{
+                        reject(error);
+                    }
+                }
+            );
+        });
+    }
       
       
 }

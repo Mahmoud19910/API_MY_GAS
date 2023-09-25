@@ -116,7 +116,7 @@ class Userscontroller{
 
 // تسجيل عميل جديد
 static async addClientAccount(request, response) {
-    const { name, user_type, email, pass , address , client_lat_location , client_long_location} = request.body;
+    const { name, user_type, email, pass , address , phone ,  client_lat_location , client_long_location} = request.body;
 
     try{
  // Check email format
@@ -157,7 +157,7 @@ static async addClientAccount(request, response) {
         //  });
 
        
-         const result = await usersModle.addClient( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass , verificationCode , address , client_lat_location , client_long_location);
+         const result = await usersModle.addClient( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass , verificationCode , address , phone , client_lat_location , client_long_location);
 
          if (result) {
                  response.status(200).json({
@@ -271,7 +271,7 @@ static async addClientAccount(request, response) {
 // }
 // تسجيل سائق جديد
 static async addDriverAccount(request, response) {
-    const { name, user_type, email, pass , vehicle_number , phone , lat_location , long_location} = request.body;
+    const { name, user_type, email, pass , vehicle_number , phone , lat_location , long_location , driver_address} = request.body;
 
     try {
         // Check email format
@@ -282,7 +282,7 @@ static async addDriverAccount(request, response) {
 
         // Generate a random 6-digit verification code
         verificationCode = Math.floor(100000 + Math.random() * 900000);
-        const result = await usersModle.addDriver( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass, verificationCode, vehicle_number, phone, lat_location, long_location);
+        const result = await usersModle.addDriver( Math.floor(100000000 + Math.random()*99999900) , name, user_type, email, pass, verificationCode, vehicle_number, phone, lat_location, long_location , driver_address);
 
         if (result) {
             // اذا تمت العملية بنجاح يتم توليد رقم تحقق و ارساله للايميل المدخل من قبل المستخدم
@@ -689,7 +689,7 @@ static async updateCompanyInfo(request , response){
     try{
        const {company_name , email , image , address , company_registration_number , id}= request.body;
 
-    const result = await usersModle.updateCompany(image , company_registration_number  , address , email , company_name , id);
+    const result = await usersModle.updateCompany(image , company_registration_number  , address , email , company_name , id , phone);
 
     if(result){
         response.status(200).json({
@@ -775,6 +775,37 @@ static async upDateDriverlocation(request , response){
           });
     }
 
+}
+
+static async upDateDriverInfo(request , response){
+
+    try{
+       const {driver_name , email , vehicle_number , phone , image , driver_address , id}= request.body;
+
+    const result = await usersModle.updateDriver(driver_name , email , vehicle_number , phone , image , driver_address , id);
+
+    if(result){
+        response.status(200).json({
+            "status": true,
+            "message": "Success Update",
+            "data": result
+          });
+    }else{
+        response.status(401).json({
+            "status": false,
+            "message": "Un Success Update",
+            "data": null
+          });
+    }
+
+
+    }catch(error){
+        response.status(500).json({
+            "status": false,
+            "message": error,
+            "data": null
+          });
+    }
 }
 
 

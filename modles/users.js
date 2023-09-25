@@ -54,10 +54,10 @@ class UsersModle{
     }
 
     // انشا حساب عميل 
-    static async addClient(id , name , user_type , email , pass , verificationCode , address , client_lat_location , client_long_location){
+    static async addClient(id , name , user_type , email , pass , verificationCode , address , phone , client_lat_location , client_long_location){
         return new Promise((resolve , reject)=>{
 
-            db.query("insert into users_info (id , name , user_type , email , pass , verificationCode , phone , image , client_address , client_lat_location , client_long_location) values (?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , verificationCode , "" , "" , address , client_lat_location , client_long_location] , (error , result)=>{
+            db.query("insert into users_info (id , name , user_type , email , pass , verificationCode , phone , image , client_address  , client_lat_location , client_long_location) values (?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , verificationCode , phone , "" , address  , client_lat_location , client_long_location] , (error , result)=>{
                 if(!error){
                     resolve(result);
                 }else{
@@ -68,10 +68,10 @@ class UsersModle{
     }
 
     // انشا حساب سائق 
-    static async addDriver(id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location){
+    static async addDriver(id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location , driver_address){
         return new Promise((resolve , reject)=>{
 
-            db.query("insert into driver_account (id , driver_name , user_type , email , pass , verificationCode , vehicle_number , phone ,  driver_lat_location , driver_long_location , evaluations , orders_number , image) values (?,?,?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location , 0 , 0 , ""] , (error , result)=>{
+            db.query("insert into driver_account (id , driver_name , user_type , email , pass , verificationCode , vehicle_number , phone ,  driver_lat_location , driver_long_location , evaluations , orders_number , image , driver_address) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , verificationCode , vehicle_number , phone ,  lat_location , long_location , 0 , 0 , "" , driver_address] , (error , result)=>{
                 if(!error){
                     resolve(result);
                 }else{
@@ -85,7 +85,7 @@ class UsersModle{
     static async addCompany(id , name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode , address){
         return new Promise((resolve , reject)=>{
 
-            db.query("insert into  company_account (id , company_name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode , evaluations , orders_number , image , address) values (?,?,?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , company_registration_number , phone ,  lat_location , long_location , verificationCode , 0 , 0 ,"" , address] , (error , result)=>{
+            db.query("insert into  company_account (id , company_name , user_type , email , pass , company_registration_number  , phone ,  lat_location , long_location , verificationCode , evaluations , orders_number , image , address) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?) " , [id , name , user_type , email , pass , company_registration_number , phone ,  lat_location , long_location , verificationCode , 0 , 0 ,"" , address] , (error , result)=>{
                 if(!error){
                     resolve(result);
                 }else{
@@ -375,12 +375,12 @@ class UsersModle{
         })
     }
 
-    static async updateCompany(image , recordNum , address , email , name , id){
+    static async updateCompany(image , company_registration_number  , address , email , company_name , id , phone){
 
         return new Promise((resolve , reject)=>{
 
-            db.query("UPDATE company_account SET image=? , company_registration_number=?	, address=? , email=? , company_name=? WHERE id=?" ,
-             [image , recordNum , address  , email , name , id] ,(error , result)=>{
+            db.query("UPDATE company_account SET image=? , company_registration_number=?	, address=? , email=? , company_name=? phone=? WHERE id=?" ,
+             [image , company_registration_number  , address , email , company_name , phone , id] ,(error , result)=>{
 
                 if(!error){
 
@@ -399,6 +399,24 @@ class UsersModle{
             db.query("UPDATE driver_account SET  driver_lat_location=? , driver_long_location=? WHERE id=?" , [lat_client , long_client , id] , (error , result)=>{
 
                 if(!error){
+                    resolve(result)
+                }else{
+                    reject(error)
+                }
+            })
+        })
+    }
+
+
+    static async updateDriver(driver_name , email , vehicle_number , phone , image , driver_address , id){
+
+        return new Promise((resolve , reject)=>{
+
+            db.query("UPDATE driver_account SET driver_name=? , email=?	, vehicle_number=? , phone=? , image=? ,  driver_address=? WHERE id=?" ,
+             [driver_name , email , vehicle_number , phone , image , driver_address , id] ,(error , result)=>{
+
+                if(!error){
+
                     resolve(result)
                 }else{
                     reject(error)

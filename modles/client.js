@@ -208,18 +208,16 @@ db.query("SELECT orders_number FROM company_account WHERE id=?", [company_id], (
 
             if(user_type === "company"){
 
-                console.log("1")
+                console.log(`Reciver Id  ${reciver_id}`)
                 db.query(
                     `
-  SELECT chat.id , chat.message , chat.created_at , sender_info.name , reciver_info.company_name
+  SELECT chat.id , chat.message , chat.created_at , chat.reciver_type , chat.sender_type , chat.sender_id , chat.reciver_id , sender_info.name , reciver_info.company_name
   FROM chat
   LEFT JOIN users_info AS sender_info ON chat.sender_id = sender_info.id
   LEFT JOIN company_account AS reciver_info ON chat.sender_id = reciver_info.id
   WHERE (chat.sender_id = ? AND chat.reciver_id = ?)
      OR (chat.sender_id = ? AND chat.reciver_id = ?)
-     ORDER BY chat.id
-
-`,
+     ORDER BY chat.id`,
                     [sender_id , reciver_id , reciver_id , sender_id],
                     (error, result) => {
                         if (!error) {
@@ -304,6 +302,23 @@ console.log("2")
                     resolve(updateResult);
                 });
             });
+        });
+    }
+
+
+    static async getAllClientNotificationById(clientId){
+        return new Promise((resolve , reject)=>{
+            db.query(
+                `SELECT * FROM app_notifications WHERE reciver_id=?`,
+                [clientId],
+                (error , result)=>{
+                    if(!error){
+                        resolve(result);
+                    }else{
+                        reject(error);
+                    }
+                }
+            );
         });
     }
     

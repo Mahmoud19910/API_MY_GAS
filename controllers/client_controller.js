@@ -1,6 +1,8 @@
 import { error } from "console";
 import clientModle from "../modles/client.js"
 import usermodle from "../modles/users.js"
+import { resolve } from "path";
+import { rejects } from "assert";
 
 
 class ClientController{
@@ -30,7 +32,6 @@ class ClientController{
           total_fill_price,
           company_name,
           company_id,
-          order_date,
           client_id,
           sender_image,
           client_address ,
@@ -40,8 +41,7 @@ class ClientController{
         // Check if any of the required fields are null or empty
         // التأكد لا يوجد  قيمة فارغة
         try{
-
-            console.log("Phone " + phone_num)
+        
             if (
                 !client_name ||
                 !client_lat_location ||
@@ -57,7 +57,6 @@ class ClientController{
                 !total_fill_price ||
                 !company_name ||
                 !company_id ||
-                !order_date ||
                 !client_id ||
                 !client_address ||
                 !company_address
@@ -97,6 +96,12 @@ class ClientController{
                 const dilvery_price = distance * 2; // ٢ ريال لكل كيلو متر
                 const total_price	= total_buy_price + total_fill_price;
                 const order_status = "waiting";
+
+                // Get the current date and time
+const currentDate = new Date();
+
+// Get the current date
+const date = currentDate.toDateString(); 
       
                  result = await clientModle.addOrderToDataBase( client_name,
                     client_lat_location,
@@ -111,7 +116,7 @@ class ClientController{
                     dilvery_price,
                     order_status,
                     company_name,
-                    order_date,
+                    date,
                     total_price,
                     company_lat_location,
                     company_long_location,
@@ -162,7 +167,8 @@ class ClientController{
                         "status":false,
                         "message":error,
                         "data":result
-                     });        
+                     });    
+
                               }
 
       
@@ -185,7 +191,7 @@ class ClientController{
      
       // جلب تفاصيل الطلب عن طريق id
       static async getOrderById(request , response){
-        const order_num = request.params.order_num; // Access the specific
+        const order_num = request.query.order_num;
         console.log("Order Num  "+ order_num)
         if(order_num){
             console.log(order_num)
@@ -486,8 +492,8 @@ class ClientController{
     console.log("Reciver Why Null")
     console.log(reciver_id);
     // Listen for chat messages
-    socket.on(`${reciver_id}` , (msg) => {
-      io.emit(`${reciver_id}`, msg); // Broadcast the message to all connected clients
+    socket.on(`chat${reciver_id}` , (msg) => {
+      io.emit(`chat${reciver_id}`, msg); // Broadcast the message to all connected clients
     });
   
     // Listen for disconnections
@@ -518,9 +524,9 @@ class ClientController{
 
     static async evaluationsDriver(request , response)
     {
-        const {evaluations , id} = request.body;
+        const {evaluations , driverId} = request.body;
         try{
-            const result = await clientModle.evaluationDriverById(evaluations , id);
+            const result = await clientModle.evaluationDriverById(evaluations , driverId);
 
             if(result){
                 response.status(200).json({
@@ -544,6 +550,41 @@ class ClientController{
             });
         }
       
+    }
+
+
+    static async getAllClientNotification(request , response){
+
+       const clienId =  Number(request.query.clientId);
+
+       console.log(clienId)
+       try{
+
+      const result = await clientModle.getAllClientNotificationById(clienId);
+
+      console.log(`result`)
+      if(result && result.length>0){
+        response.status(200).json({
+            status: true,
+            message: "Success ",
+            data: result,
+        });
+      }else{
+        response.status(401).json({
+            status: false,
+            message: "Un Success ",
+            data: null,
+        });
+      }
+
+       }catch(error){
+        response.status(500).json({
+            status: false,
+            message: error,
+            data: null,
+        });
+       }
+
     }
     
     

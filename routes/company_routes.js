@@ -6,7 +6,7 @@ const companyExpress = express.Router();
 
 companyExpress.post("/addService" , companyController.addService);
 companyExpress.put("/updateService" , companyController.updateService);
-companyExpress.get("/getOrderAvaliableFromClient" , companyController.getOrderClientAvaliable);
+companyExpress.get("/getOrderAvaliableClient" , companyController.getOrderClientAvaliable);
 companyExpress.get("/getAllOrderClient" , companyController.getAllOrderClient);
 companyExpress.get("/getOrderClientDetails" , companyController.getOrderClientDetail);
 companyExpress.put("/acceptedToOrderOrCancel" , companyController.acceptOrCancelOrder);
@@ -17,6 +17,14 @@ companyExpress.get("/searchForDriver" , companyController.searchForDriver);
 companyExpress.post("/showDetailsDriverOnclickTheDriverLocation" , companyController.showDriverDetailsOnclickTheLocation); // عند ضغط الشركة على موقع السائق يظهر المسافة و الوقت في bottom sheet
 companyExpress.post("/sendNewOrderToDriver" , companyController.newOrderToDriver);
 companyExpress.get("/getAllUsersChatCompany", companyController.getAllUsersINChatCompany);
+companyExpress.post("/sendMessage", companyController.sendMessage);
+companyExpress.get("/getMessagesById", companyController.getMessagesById);
+companyExpress.delete("/deleteMessageById", companyController.deleteMessageById);
+companyExpress.get("/getAllCompanyNotificationById", companyController.getAllCompanyNotification);
+
+
+
+
 
 
 

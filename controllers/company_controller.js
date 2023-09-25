@@ -3,6 +3,7 @@ import usersModle from "../modles/users.js";
 import clientModle from "../modles/client.js"
 
 
+
 class CompanyController{
 
    static setIo(io){
@@ -68,34 +69,36 @@ try{
     }
 
     static async getOrderClientAvaliable(request, response) {
-        try {
-            const companyId = request.query.company_id; // Use request.query to access query parameters
+        // try {
+            const companyId = request.query.company_id;// Use request.query to access query parameters
     
             console.log(`company Id ${companyId}`);
+            response.status(200).json({"fas":r3r})
     
-            const result = await companyModle.getOrdersClientAvaliable(companyId); // Await the asynchronous operation
+        //     const result = await companyModle.getOrdersClientAvaliable(companyId); // Await the asynchronous operation
     
-            if (result) {
-                response.status(200).json({
-                    status: true,
-                    message: "Success",
-                    data: result,
-                });
-            } else {
-                response.status(402).json({
-                    status: false,
-                    message: "Un Success",
-                    data: null,
-                });
-            }
-        } catch (error) {
-            console.log(`Error   ${error}`)
-            response.status(500).json({
-                status: false,
-                message: error,
-                data: null,
-            });
-        }
+        //     console.log(result)
+        //     if (result) {
+        //         response.status(200).json({
+        //             status: true,
+        //             message: "Success",
+        //             data: "result",
+        //         });
+        //     } else {
+        //         response.status(402).json({
+        //             status: false,
+        //             message: "Un Success",
+        //             data: "null",
+        //         });
+        //     }
+        // } catch (error) {
+        //     console.log(`Error   ${error}`)
+        //     response.status(500).json({
+        //         status: false,
+        //         message: error,
+        //         data: null,
+        //     });
+        // }
     }
 
 
@@ -486,6 +489,166 @@ try{
             });
         }
     }
+
+
+    static async sendMessage(request , response){
+
+        const io = CompanyController.io;
+
+        const currentTime = new Date();
+        const hours = currentTime.getHours();
+        const minutes = currentTime.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+       // Convert hours from 24-hour format to 12-hour format
+       const formattedHours = hours % 12 || 12;
+      const timeString = `${formattedHours}:${minutes < 10 ? '0' : ''}${minutes} ${ampm}`;
+
+        try{
+            const {message , sender_id , reciver_id , sender_type , reciver_type} = request.body;
+           const result = await clientModle.sendMessage(message , sender_id , reciver_id , sender_type , reciver_type , timeString);
+           const senderUser = await usersModle.getUserById(sender_id , "company");
+
+           console.log(result)
+           if(result && senderUser){
+            response.status(200).json({
+                status: true,
+                message: "Success Send",
+                data: null,
+            });
+
+
+            // WebSocket event handling
+    io.on('connection', (socket) => {
+    console.log('User connected');
+  
+    console.log("Reciver Why Null")
+    console.log(reciver_id);
+    // Listen for chat messages
+    socket.on(`chat${reciver_id}` , (msg) => {
+      io.emit(`chat${reciver_id}`, msg); // Broadcast the message to all connected clients
+    });
+  
+    // Listen for disconnections
+    socket.on('disconnect', () => {
+      console.log('User disconnected');
+    });
+  });
+           
+              
+           }else{
+            response.status(401).json({
+                status: false,
+                message: "Un Success Send The Message ",
+                data: null,
+            });
+           }
+
+        }catch(error){
+            response.status(500).json({
+                status: false,
+                message: error,
+                data: null,
+            });
+        }
+
+    }
+
+
+    static async getMessagesById(request , response){
+
+        try{
+
+            const {sender_id , reciver_id ,user_type } = request.body
+            const result = await clientModle.getAllmessagesById(Number(sender_id) , Number(reciver_id) ,  user_type) ;
+
+            if(result){
+                response.status(200).json({
+                    "status": true,
+                    "message": "Success",
+                    "data": result
+                })
+            }else{
+                response.status(401).json({
+                    "status": false,
+                    "message": "Un Success",
+                    "data": null
+                })
+            }
+        }catch(error){
+
+            response.status(500).json({
+                "status": true,
+                "message": error,
+                "data": null
+            })
+
+        }
+
+    }
+
+    static async deleteMessageById(request , response){
+        const id = Number(request.query.id);
+
+        try{
+            const result = await clientModle.deleteMessageByIdFromDataBase(id);
+
+            if(result){
+                response.status(200).json({
+                    status: true,
+                    message: "Success Delete ",
+                    data: null,
+                });
+            }else{
+                response.status(401).json({
+                    status: false,
+                    message: "Un Success Delete ",
+                    data: null,
+                });  
+            }
+        }catch(error){
+            response.status(500).json({
+                status: false,
+                message: error,
+                data: null,
+            });  
+        }
+     
+    }
+
+    static async getAllCompanyNotification(request , response){
+
+        const companyId =  Number(request.query.companyId);
+ 
+        console.log(companyId)
+        try{
+ 
+       const result = await companyModle.getAllCompanyNotificationById(companyId);
+ 
+       console.log(`result`)
+       if(result && result.length>0){
+         response.status(200).json({
+             status: true,
+             message: "Success ",
+             data: result,
+         });
+       }else{
+         response.status(401).json({
+             status: false,
+             message: "Un Success ",
+             data: null,
+         });
+       }
+ 
+        }catch(error){
+         response.status(500).json({
+             status: false,
+             message: error,
+             data: null,
+         });
+        }
+ 
+     }
+     
 
 }
 export default CompanyController;
