@@ -1,6 +1,8 @@
 import express from "express";
 import userController from "../controllers/user_controller.js"
 import UsersModle from "../modles/users.js";
+import fileController from "../controllers/file.controller.js";
+
 
 
 const userExpress = express.Router();
@@ -24,6 +26,15 @@ userExpress.put("/updateCompanyInfo" , userController.updateCompanyInfo);
 userExpress.put("/updateClientLocation" , userController.upDateClientlocation);
 userExpress.put("/updateDriverLocation" , userController.upDateDriverlocation);
 userExpress.put("/updateDriverInfo" , userController.upDateDriverInfo);
+
+
+userExpress.put("/uploadAndUpdateClient", fileController.updateClientAndUploadImage);
+userExpress.put("/uploadAndUpdateCompany", fileController.updateCompanyAndUploadImage);
+userExpress.put("/uploadAndUpdateDriver", fileController.updateDriverAndUploadImage);
+
+userExpress.get("/files", fileController.getListFiles);
+userExpress.get("/files/:name", fileController.download);
+
 
 
 

@@ -379,13 +379,14 @@ class UsersModle{
 
         return new Promise((resolve , reject)=>{
 
-            db.query("UPDATE company_account SET image=? , company_registration_number=?	, address=? , email=? , company_name=? phone=? WHERE id=?" ,
+            db.query("UPDATE company_account SET image=? , company_registration_number=? , address=? , email=? , company_name=? , phone=? WHERE id=? " ,
              [image , company_registration_number  , address , email , company_name , phone , id] ,(error , result)=>{
 
                 if(!error){
 
                     resolve(result)
                 }else{
+                    console.log(`ERROR ${error}`)
                     reject(error)
                 }
             })

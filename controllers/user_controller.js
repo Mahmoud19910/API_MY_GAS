@@ -687,7 +687,8 @@ static async updateUserInfo(request , response){
 static async updateCompanyInfo(request , response){
 
     try{
-       const {company_name , email , image , address , company_registration_number , id}= request.body;
+        
+       const {company_name , email , image , address , company_registration_number , id , phone}= request.body;
 
     const result = await usersModle.updateCompany(image , company_registration_number  , address , email , company_name , id , phone);
 
