@@ -8,71 +8,19 @@ class ClientModel {
 
     // حفظ الطلب في قاعدة البيانات و حفظ الاشعار
     static async addOrderToDataBase(
-        client_name,
-        client_lat_location,
-        client_long_location,
-        phone_num,
         buy_cylinder,
         number_cylinders,
         total_buy_price,
         filling_cylinder,
         packing_quantity,
         total_fill_price,
-        dilvery_price,
         order_status,
-        company_name,
         order_date,
-        total_price,
-        company_lat_location,
-        company_long_location,
         company_id , 
         client_id ,
-        time_to_arrive	,
-        sender_image , 
-        client_address ,
-        company_address
+        time_to_arrive	
     ) {
         return new Promise((resolve, reject) => {
-            db.query(
-                "INSERT INTO client_orders (client_name, client_lat_location, client_long_location, phone_num, buy_cylinder, number_cylinders, total_buy_price, filling_cylinder, packing_quantity, total_fill_price, dilvery_price, order_status, company_name, order_date, total_price, company_lat_location, company_long_location , company_id , client_id , time_to_arrive	, sender_image , client_address , company_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? , ? , ? , ? , ? , ? , ?)",
-                [
-                    client_name,
-                    client_lat_location,
-                    client_long_location,
-                    phone_num,
-                    buy_cylinder,
-                    number_cylinders,
-                    total_buy_price,
-                    filling_cylinder,
-                    packing_quantity,
-                    total_fill_price,
-                    dilvery_price,
-                    order_status,
-                    company_name,
-                    order_date,
-                    total_price,
-                    company_lat_location,
-                    company_long_location,
-                    company_id ,
-                    client_id ,
-                    time_to_arrive ,
-                    sender_image ,
-                    client_address ,
-                    company_address
-                ],
-                (error, result) => {
-                    if (error) {
-                        console.error("Error inserting data:", error);
-                        reject(error);
-                        console.log(`Error  ${error}`)
-                    } else {
-
-                        console.log(`Result  ${result}`)
-                        console.log("Data inserted successfully:", result);
-                        resolve(result);
-                    }
-                }
-            );
 
             const currentTime = new Date();
             const hours = currentTime.getHours();
@@ -82,8 +30,95 @@ class ClientModel {
            const formattedHours = hours % 12 || 12;
           const timeString = `${formattedHours}:${minutes < 10 ? '0' : ''}${minutes} ${ampm}`;   
 
+            let company_name , company_lat_location , company_long_location  , company_address;
+            let client_name , client_lat , client_long , client_phone , client_address , client_image;
+
+            // جلب بيانات المستخةم و الشركة لحساب المسافة و الوقت 
+            db.query(`SELECT company_name , lat_location , long_location ,
+            address
+            FROM company_account
+             WHERE id=?` , [company_id] , (error , result)=>{
+
+                if(!error && result.length > 0){
+
+                    const company = result[0];
+
+                    company_name = company.company_name;
+                    company_lat_location = company.lat_location;
+                    company_long_location = company.long_location;
+                    company_address = company.address;
+                    console.log(company_address);
+
+                    db.query(`SELECT name , client_lat_location , client_long_location ,
+                    phone  , client_address , image
+                    FROM users_info
+                    WHERE id=?` , [client_id] , (error , result)=>{
+
+                if(!error && result.length > 0){
+
+                    const client = result[0];
+
+                    client_name = client.name;
+                    client_lat = client.client_lat_location;
+                    client_long = client.client_long_location;
+                      client_phone = client.phone;
+                      client_address = client.client_address;
+                      client_image = client.image;
+
+                    console.log(client);
+
+                    // حساب المسافة و الزمن و سعر التوصيل
+                       // يتم حساب المسافة عن طريق خطوط الطول و العرض
+                let client_long_location_radians = client_long * (Math.PI / 180);
+                let company_long_location_radians = company_long_location * (Math.PI / 180);
+                let client_lat_location_radians = client_lat * (Math.PI / 180);
+                let company_lat_location_radians = company_lat_location * (Math.PI / 180);
+            
+                // Haversine formula
+                let dlon = company_long_location_radians - client_long_location_radians;
+                let dlat = company_lat_location_radians - client_lat_location_radians;
+                let a = Math.pow(Math.sin(dlat / 2), 2) +
+                        Math.cos(client_lat_location_radians) * Math.cos(company_lat_location_radians) *
+                        Math.pow(Math.sin(dlon / 2), 2);
+            
+                let c = 2 * Math.asin(Math.sqrt(a));
+            
+                // Radius of Earth in kilometers. Use 3956 for miles
+                let r = 6371;
+                let distance = c * r; // حساب المسافة 
+            
+                const dilvery_price = distance * 2; // ٢ ريال لكل كيلو متر
+                const total_price	= total_buy_price + total_fill_price + dilvery_price ;
+
+
+                    // حفظ الطلب 
+
+                db.query(
+                "INSERT INTO client_order (buy_cylinder, number_cylinders, total_buy_price, filling_cylinder, packing_quantity, total_fill_price, dilvery_price, order_status, order_date , total_price , company_id , client_id , time_to_arrive ) VALUES (?, ?, ?, ? ,? ,? ,? ,? ,? ,? ,? ,? ,?)",
+                [
+                buy_cylinder ,
+                number_cylinders , 
+                total_buy_price , 
+                filling_cylinder , 
+                packing_quantity , 
+                total_fill_price , 
+                dilvery_price , 
+                order_status , 
+                order_date , 
+                total_price ,
+                company_id , 
+                client_id , 
+                "0"  
+                ],
+                (error, result) => {
+                    if (error) {
+                        console.error("Error inserting data:", error);
+                        reject(error);
+                        console.log(`Error  ${error}`)
+                    } else {
+
             db.query("INSERT INTO app_notifications (sender_image , client_name , reciver_id , sender_id , content , time) VALUES (? , ? , ? , ? , ? , ?)" ,
-             [sender_image , client_name , company_id , client_id ,  `طلب ${filling_cylinder} \n ${buy_cylinder}` , timeString] , (error , result)=>{
+             [client_image , client_name , company_id , client_id ,  `طلب ${filling_cylinder} \n ${buy_cylinder}` , timeString] , (error , result)=>{
 
                 if(!error){
                     resolve(result)
@@ -94,9 +129,30 @@ class ClientModel {
                 }
 
             })
+                    }
+                }
+            );
 
-            // ارسال رسالة للشركة عند ارسال طللب
-            db.query("INSERT INTO chat (sender_id , reciver_id  , message	 , created_at , updated_at , sender_type , reciver_type) VALUES (? , ? , ? , ? ,? , ? , ?)" , [client_id , company_id , `طلب ${filling_cylinder}` , timeString , "" , "client" , "company"] , (error , result)=>{
+
+
+                }else{
+                    reject(error)
+                }
+
+             });
+                    
+
+                }else{
+                    reject(error)
+                }
+
+             });
+
+         
+
+            // // ارسال رسالة للشركة عند ارسال طللب
+            db.query("INSERT INTO chat (sender_id , reciver_id  , message	 , created_at , updated_at , sender_type , reciver_type) VALUES (? , ? , ? , ? ,? , ? , ?)" ,
+             [client_id , company_id , `طلب ${filling_cylinder}` , timeString , "" , "client" , "company"] , (error , result)=>{
 
                 if(!error){
                     resolve(result)
@@ -134,7 +190,17 @@ db.query("SELECT orders_number FROM company_account WHERE id=?", [company_id], (
 
     static async getOrderByIdFromDataBase(order_num){
         return new Promise((resolve , reject)=>{
-            db.query("SELECT * FROM client_orders WHERE order_num=?", [order_num], (error, result) => {
+            db.query(`
+            SELECT client.name, client.client_lat_location, client.client_long_location,
+            client.phone, client.client_address, client.image,
+            company.company_name, company.lat_location, company.long_location,
+            company.address, client_order.buy_cylinder, client_order.number_cylinders, client_order.total_buy_price,
+            client_order.filling_cylinder, client_order.packing_quantity, client_order.total_fill_price, client_order.order_status,
+            client_order.dilvery_price, client_order.order_date, client_order.total_price, client_order.time_to_arrive, client_order.order_num
+          FROM client_order
+          LEFT JOIN users_info AS client ON client.id = client_order.client_id
+          LEFT JOIN company_account AS company ON company.id = client_order.company_id
+          WHERE client_order.order_num = ?`, [order_num], (error, result) => {
                 if (!error) {
                     resolve(result);
                 } else {
@@ -147,7 +213,16 @@ db.query("SELECT orders_number FROM company_account WHERE id=?", [company_id], (
     static async getOrderClientbyIdFromDataBase(client_id){
         return new Promise((resolve , reject)=>{
 
-            db.query("SELECT * FROM client_orders WHERE client_id=?", [client_id], (error, result) => {
+            db.query(` SELECT client.name, client.client_lat_location, client.client_long_location,
+            client.phone, client.client_address, client.image,
+            company.company_name, company.lat_location, company.long_location,
+            company.address, client_order.buy_cylinder, client_order.number_cylinders, client_order.total_buy_price,
+            client_order.filling_cylinder, client_order.packing_quantity, client_order.total_fill_price, client_order.order_status,
+            client_order.dilvery_price, client_order.order_date, client_order.total_price, client_order.time_to_arrive, client_order.order_num
+          FROM client_order
+          LEFT JOIN users_info AS client ON client.id = client_order.client_id
+          LEFT JOIN company_account AS company ON company.id = client_order.company_id
+          WHERE client_order.client_id = ?`, [client_id], (error, result) => {
                 if (!error) {
                     resolve(result);
                 } else {
@@ -159,7 +234,16 @@ db.query("SELECT orders_number FROM company_account WHERE id=?", [company_id], (
     static async getAllOrderFromDataBase(){
 
         return new Promise((resolve , reject)=>{
-            db.query("SELECT * FROM client_orders " , [] , (error , result)=>{
+            db.query(`
+            SELECT client.name, client.client_lat_location, client.client_long_location,
+            client.phone, client.client_address, client.image,
+            company.company_name, company.lat_location, company.long_location,
+            company.address, client_order.buy_cylinder, client_order.number_cylinders, client_order.total_buy_price,
+            client_order.filling_cylinder, client_order.packing_quantity, client_order.total_fill_price, client_order.order_status,
+            client_order.dilvery_price, client_order.order_date, client_order.total_price, client_order.time_to_arrive, client_order.order_num
+          FROM client_order
+          LEFT JOIN users_info AS client ON client.id = client_order.client_id
+          LEFT JOIN company_account AS company ON company.id = client_order.company_id` , [] , (error , result)=>{
                 if(!error){
                     resolve(result)
                 }else{
@@ -203,10 +287,10 @@ db.query("SELECT orders_number FROM company_account WHERE id=?", [company_id], (
     }
 
 
-    static async getAllmessagesById(sender_id , reciver_id ,user_type ) {
+    static async getAllmessagesById(sender_id , reciver_id , reciver_type , sender_type ) {
         return new Promise((resolve, reject) => {
 
-            if(user_type === "company"){
+            if(sender_type === "company" && reciver_type === "client" || sender_type === "client" && reciver_type === "company" ){
 
                 console.log(`Reciver Id  ${reciver_id}`)
                 db.query(
@@ -230,8 +314,30 @@ db.query("SELECT orders_number FROM company_account WHERE id=?", [company_id], (
 
             }
             else
-            if(user_type === "driver" ){
-console.log("2")
+            if(sender_type === "driver" && reciver_type === "company" || sender_type === "company" && reciver_type === "driver" ){
+                console.log("2")
+                db.query(
+                    `
+                    SELECT chat.id , chat.message , chat.created_at , sender_info.company_name , reciver_info.driver_name	
+                    FROM chat
+                    LEFT JOIN company_account AS sender_info ON chat.sender_id = sender_info.id
+                    LEFT JOIN driver_account AS reciver_info ON chat.sender_id = reciver_info.id
+                    WHERE (chat.sender_id = ? AND chat.reciver_id = ?)
+                       OR (chat.sender_id = ? AND chat.reciver_id = ?)
+                       ORDER BY chat.id
+                  `,
+                    [sender_id, reciver_id  , reciver_id , sender_id],
+                    (error, result) => {
+                        if (!error) {
+                            resolve(result);
+                        } else {
+                            reject(error);
+                        }
+                    }
+                );
+
+            }else
+            if(sender_type === "driver" && reciver_type === "client" || sender_type === "client" && reciver_type === "driver"){
                 db.query(
                     `
                     SELECT chat.id , chat.message , chat.created_at , sender_info.name , reciver_info.driver_name	
@@ -251,9 +357,8 @@ console.log("2")
                         }
                     }
                 );
-
             }else{
-                
+                reject("Error Input")
             }
           
         });
