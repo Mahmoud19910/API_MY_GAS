@@ -60,7 +60,15 @@ class Company{
       static async getAllOrdersClient(company_id){
         return new Promise((resolve , reject)=>{
 
-          db.query("SELECT company_id , client_id , filling_cylinder  , buy_cylinder , order_num , sender_image  FROM client_orders WHERE company_id=? ORDER BY order_num ASC" , [company_id ]   , (error , result)=>{
+          db.query(`
+          SELECT client.id , client.image,
+          company.id , client_order.buy_cylinder, client_order.filling_cylinder, 
+          client_order.order_num
+        FROM client_order
+        LEFT JOIN users_info AS client ON client.id = client_order.client_id
+        LEFT JOIN company_account AS company ON company.id = client_order.company_id
+        WHERE client_order.company_id=? ORDER BY order_num ASC
+        ` , [company_id ]   , (error , result)=>{
 
             if(!error){
 
@@ -71,13 +79,37 @@ class Company{
           })
         })
       }
+
+      // static async getAllOrdersClient(company_id){
+      //   return new Promise((resolve , reject)=>{
+
+      //     db.query("SELECT company_id , client_id , filling_cylinder  , buy_cylinder , order_num , sender_image  FROM client_orders WHERE company_id=? ORDER BY order_num ASC" , [company_id ]   , (error , result)=>{
+
+      //       if(!error){
+
+      //         resolve(result)
+      //       }else{
+      //         reject(error)
+      //       }
+      //     })
+      //   })
+      // }
 
 
       static async getOrderDetails(order_num ){
 
         return new Promise((resolve , reject)=>{
 
-          db.query("SELECT client_id , client_name , buy_cylinder , filling_cylinder , total_buy_price , total_fill_price , total_price , client_address  FROM client_orders WHERE order_num=?" , [order_num] , (error , result)=>{
+          db.query(`
+          SELECT client.name, client.id,
+          client.client_address, 
+         client_order.buy_cylinder, client_order.total_buy_price,
+          client_order.filling_cylinder,  client_order.total_fill_price, 
+         client_order.total_price
+        FROM client_order
+        LEFT JOIN users_info AS client ON client.id = client_order.client_id
+        LEFT JOIN company_account AS company ON company.id = client_order.company_id
+        WHERE client_order.order_num=?` , [order_num] , (error , result)=>{
 
             if(!error){
               resolve(result)
@@ -87,6 +119,21 @@ class Company{
           })
         })
       }
+
+      // static async getOrderDetails(order_num ){
+
+      //   return new Promise((resolve , reject)=>{
+
+      //     db.query("SELECT client_id , client_name , buy_cylinder , filling_cylinder , total_buy_price , total_fill_price , total_price , client_address  FROM client_orders WHERE order_num=?" , [order_num] , (error , result)=>{
+
+      //       if(!error){
+      //         resolve(result)
+      //       }else{
+      //         reject(error)
+      //       }
+      //     })
+      //   })
+      // }
 
   
     
@@ -130,6 +177,7 @@ class Company{
         let clientName , clientImage , clientId , buy_cylinder , filling_cylinder;
         let minDistance=0;
         let latCompany ,longCompany , companyId , companyName , rejected_order_num	 ;
+        let lessDistanceCompanyId;
 
         return new Promise((resolve ,  reject)=>{
           
@@ -163,7 +211,7 @@ class Company{
                 // تعديل حالة الطلب الى مقبول
                 // Update the client's order to the nearest company
                 db.query(
-                  "UPDATE client_orders SET order_status=? WHERE order_num=?",
+                  "UPDATE client_order SET order_status=? WHERE order_num=?",
                   [order_status , order_num],
                   (error, result) => {
                     if (!error) {
@@ -203,15 +251,24 @@ class Company{
 
                if (order_status.toLowerCase() === "cancel") {
                 // Query to get the client's location
-                db.query("SELECT * FROM client_orders WHERE order_num=?", [order_num], (error1, result1) => {
+                db.query(`SELECT client.name, client.client_lat_location, client.client_long_location, client.id ,
+                client.phone, client.client_address, client.image,
+                company.company_name, company.lat_location, company.long_location,
+                company.address, client_order.buy_cylinder, client_order.number_cylinders, client_order.total_buy_price,
+                client_order.filling_cylinder, client_order.packing_quantity, client_order.total_fill_price, client_order.order_status,
+                client_order.dilvery_price, client_order.order_date, client_order.total_price, client_order.time_to_arrive, client_order.order_num
+              FROM client_order
+              LEFT JOIN users_info AS client ON client.id = client_order.client_id
+              LEFT JOIN company_account AS company ON company.id = client_order.company_id
+              WHERE client_order.order_num = ?`, [order_num], (error1, result1) => {
                   console.log("Result1:", result1);
 
                   if (!error1 && result1.length > 0) {
                     latClient = result1[0].client_lat_location;
                     longClient = result1[0].client_long_location;
-                    clientName = result1[0].client_name;
-                    clientImage = result1[0].sender_image;
-                    clientId = result1[0].client_id;
+                    clientName = result1[0].name;
+                    clientImage = result1[0].image;
+                    clientId = result1[0].id;
                     filling_cylinder = result1[0].filling_cylinder;
                     buy_cylinder = result1[0].buy_cylinder;
 
@@ -249,30 +306,29 @@ class Company{
                             let distance = c * r; // Calculate the distance in kilometers
           
                             // Update minDistance as needed
-                            if (i === 0 || minDistance > distance) {
+                            if (i === 0 || minDistance > distance && row.id !== company_id) {
                               minDistance = distance;
                               latCompany = row.lat_location;
                               longCompany = row.long_location;
-                              companyId = row.id;
+                              lessDistanceCompanyId = row.id;
                               companyName = row.company_name;
                               rejected_order_num	 = row.rejected_order_num	+ 1;
+                              console.log(`Client Latitude: ${latClient}`);
+                              console.log(`Client Longitude: ${longClient}`);
+                              console.log(`The distance to ${companyId} is ${distance} km`);
 
                             }
           
-                            console.log(`Client Latitude: ${latClient}`);
-                            console.log(`Client Longitude: ${longClient}`);
-                            console.log(`The distance to ${companyName} is ${distance} km`);
+                          
                           }
-          
+                          console.log(`The distance final ${lessDistanceCompanyId} is  km`);
+
                           // تعديل الطلب الى عنوان الشركة الجديد و ارسال اشعار الشركة بالطلب الجديد و اشعار الى العميل برفض الطلب و تحويله
                           db.query(
-                            "UPDATE client_orders SET order_status=?, company_name=?, company_lat_location=?, company_long_location=?, company_id=? WHERE order_num=?",
-                            ["waiting", companyName, latCompany, longCompany, companyId, order_num],
+                            "UPDATE client_order SET order_status=?, company_id=? WHERE order_num=?",
+                            ["waiting", lessDistanceCompanyId, order_num ],
                             (error, result) => {
                               if (!error) {
-
-
-
                                 const currentTime = new Date();
                                 const hours = currentTime.getHours();
                                 const minutes = currentTime.getMinutes();
@@ -313,7 +369,7 @@ class Company{
 
                                 //  اشعار طلب للشركة الجديدة
                                 db.query("INSERT INTO app_notifications (	sender_image , client_name , reciver_id , content , time , sender_id) VALUES (? ,? ,? ,? ,? ,?)",
-                                 [clientImage , clientName , companyId ,  ` طلب ${filling_cylinder} \n ${buy_cylinder}` , timeString , clientId  ]
+                                 [clientImage , clientName , lessDistanceCompanyId ,  ` طلب ${filling_cylinder} \n ${buy_cylinder}` , timeString , clientId  ]
                                  ,(error , result)=>{
          
                                    if(!error){
@@ -350,7 +406,7 @@ class Company{
                             }
                           );
 
-                           // سوف يتم حساب الطلبات المرفوضة من طرف السائق عند رفض الطلب
+                           //  حساب الطلبات المرفوضة عند رفض الطلب
                           db.query("UPDATE company_account SET rejected_order_num=? WHERE id=?" , [rejected_order_num , companyId],(error , result)=>{
                             if(!error){
                               console.log(`RESULT  : ${result}`)

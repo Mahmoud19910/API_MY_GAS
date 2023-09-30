@@ -19,8 +19,26 @@ const appExpress = express();
 const server = http.createServer(appExpress);
 const io = new Server(server);
 
+// io.on('connection', (socket) => {
+//   console.log('User connected');
+
+//   console.log("Reciver Why Null")
+//   console.log(187409233);
+//   // Listen for chat messages
+//   socket.on(`chat${187409233}` , (msg) => {
+//     io.emit(`chat${187409233}`, msg); // Broadcast the message to all connected clients
+//   });
+
+//   // Listen for disconnections
+//   socket.on('disconnect', () => {
+//     console.log('User disconnected');
+//   });
+// });
+
 global.__basedir = __dirname;
 global.uploadImageBaseUrl = 'http://localhost:4000/user/files/';
+
+
 
 
 var corsOptions = {

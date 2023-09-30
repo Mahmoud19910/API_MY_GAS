@@ -11,31 +11,21 @@ class ClientController{
         ClientController.io = io;
     }
 
-    // انشاء طلب جديد
-    static async newOrder(request, response) {
+       // انشاء طلب جديد
+       static async newOrder(request, response) {
         let result = null;
 
         const io = ClientController.io;
 
         const {
-          client_name,
-          client_lat_location,
-          client_long_location,
-          company_lat_location,
-          company_long_location,
-          phone_num,
           buy_cylinder,
           number_cylinders,
           total_buy_price,
           filling_cylinder,
           packing_quantity,
           total_fill_price,
-          company_name,
           company_id,
           client_id,
-          sender_image,
-          client_address ,
-          company_address
         } = request.body;
       
         // Check if any of the required fields are null or empty
@@ -43,23 +33,15 @@ class ClientController{
         try{
         
             if (
-                !client_name ||
-                !client_lat_location ||
-                !client_long_location ||
-                !company_lat_location ||
-                !company_long_location ||
-                !phone_num ||
+                
                 !buy_cylinder ||
                 !number_cylinders ||
                 !total_buy_price ||
                 !filling_cylinder ||
                 !packing_quantity ||
                 !total_fill_price ||
-                !company_name ||
                 !company_id ||
-                !client_id ||
-                !client_address ||
-                !company_address
+                !client_id 
               ) {
                 // Respond with an error status code and message
                 response.status(401).json({
@@ -69,63 +51,25 @@ class ClientController{
                 });
       
               } else {
-                // All required fields are present and not empty, proceed with your logic here
-                // The math module contains a function
-                // named toRadians which converts from
-                // degrees to radians.
-      
-                // يتم حساب المسافة عن طريق خطوط الطول و العرض
-                let client_long_location_radians = client_long_location * (Math.PI / 180);
-                let company_long_location_radians = company_long_location * (Math.PI / 180);
-                let client_lat_location_radians = client_lat_location * (Math.PI / 180);
-                let company_lat_location_radians = company_lat_location * (Math.PI / 180);
-            
-                // Haversine formula
-                let dlon = company_long_location_radians - client_long_location_radians;
-                let dlat = company_lat_location_radians - client_lat_location_radians;
-                let a = Math.pow(Math.sin(dlat / 2), 2) +
-                        Math.cos(client_lat_location_radians) * Math.cos(company_lat_location_radians) *
-                        Math.pow(Math.sin(dlon / 2), 2);
-            
-                let c = 2 * Math.asin(Math.sqrt(a));
-            
-                // Radius of Earth in kilometers. Use 3956 for miles
-                let r = 6371;
-                let distance = c * r; // حساب المسافة 
-            
-                const dilvery_price = distance * 2; // ٢ ريال لكل كيلو متر
-                const total_price	= total_buy_price + total_fill_price;
                 const order_status = "waiting";
-
                 // Get the current date and time
-const currentDate = new Date();
-
-// Get the current date
-const date = currentDate.toDateString(); 
+                const currentDate = new Date();
+               // Get the current date
+               const date = currentDate.toDateString(); 
       
-                 result = await clientModle.addOrderToDataBase( client_name,
-                    client_lat_location,
-                    client_long_location,
-                    phone_num,
+                 result = await clientModle.addOrderToDataBase( 
                     buy_cylinder,
                     number_cylinders,
                     total_buy_price,
                     filling_cylinder,
                     packing_quantity,
                     total_fill_price,
-                    dilvery_price,
                     order_status,
-                    company_name,
                     date,
-                    total_price,
-                    company_lat_location,
-                    company_long_location,
                     company_id ,
                     client_id , 
                     0 , // الوقت المقدر لوصول الطلب
-                    sender_image , 
-                    client_address , 
-                    company_address);
+                    );
       
                   if(result){
                     response.status(200).json({
@@ -148,18 +92,6 @@ const date = currentDate.toDateString();
                           console.log('User disconnected');
                         });
                       });
-
-                      
-                    //   io.on("connection" , (socket)=>{
-                    //     console.log(socket.handshake.query.userName)
-
-
-                        
-                    //     io.emit(`${company_id}` , {
-                    //         "client_name": client_name,
-                    //         "phone_num": phone_num,
-                    //     })
-                    //   })
 
                   }else{
                     console.log("this Error")
@@ -188,6 +120,185 @@ const date = currentDate.toDateString();
         }
 
       }
+     
+
+    // // انشاء طلب جديد
+    // static async newOrder(request, response) {
+    //     let result = null;
+
+    //     const io = ClientController.io;
+
+    //     const {
+    //       client_name,
+    //       client_lat_location,
+    //       client_long_location,
+    //       company_lat_location,
+    //       company_long_location,
+    //       phone_num,
+    //       buy_cylinder,
+    //       number_cylinders,
+    //       total_buy_price,
+    //       filling_cylinder,
+    //       packing_quantity,
+    //       total_fill_price,
+    //       company_name,
+    //       company_id,
+    //       client_id,
+    //       sender_image,
+    //       client_address ,
+    //       company_address
+    //     } = request.body;
+      
+    //     // Check if any of the required fields are null or empty
+    //     // التأكد لا يوجد  قيمة فارغة
+    //     try{
+        
+    //         if (
+    //             !client_name ||
+    //             !client_lat_location ||
+    //             !client_long_location ||
+    //             !company_lat_location ||
+    //             !company_long_location ||
+    //             !phone_num ||
+    //             !buy_cylinder ||
+    //             !number_cylinders ||
+    //             !total_buy_price ||
+    //             !filling_cylinder ||
+    //             !packing_quantity ||
+    //             !total_fill_price ||
+    //             !company_name ||
+    //             !company_id ||
+    //             !client_id ||
+    //             !client_address ||
+    //             !company_address
+    //           ) {
+    //             // Respond with an error status code and message
+    //             response.status(401).json({
+    //               status: false,
+    //               message: "Unsuccess There is contain a null value",
+    //               data: null
+    //             });
+      
+    //           } else {
+    //             // All required fields are present and not empty, proceed with your logic here
+    //             // The math module contains a function
+    //             // named toRadians which converts from
+    //             // degrees to radians.
+      
+    //             // يتم حساب المسافة عن طريق خطوط الطول و العرض
+    //             let client_long_location_radians = client_long_location * (Math.PI / 180);
+    //             let company_long_location_radians = company_long_location * (Math.PI / 180);
+    //             let client_lat_location_radians = client_lat_location * (Math.PI / 180);
+    //             let company_lat_location_radians = company_lat_location * (Math.PI / 180);
+            
+    //             // Haversine formula
+    //             let dlon = company_long_location_radians - client_long_location_radians;
+    //             let dlat = company_lat_location_radians - client_lat_location_radians;
+    //             let a = Math.pow(Math.sin(dlat / 2), 2) +
+    //                     Math.cos(client_lat_location_radians) * Math.cos(company_lat_location_radians) *
+    //                     Math.pow(Math.sin(dlon / 2), 2);
+            
+    //             let c = 2 * Math.asin(Math.sqrt(a));
+            
+    //             // Radius of Earth in kilometers. Use 3956 for miles
+    //             let r = 6371;
+    //             let distance = c * r; // حساب المسافة 
+            
+    //             const dilvery_price = distance * 2; // ٢ ريال لكل كيلو متر
+    //             const total_price	= total_buy_price + total_fill_price;
+    //             const order_status = "waiting";
+
+    //             // Get the current date and time
+    //             const currentDate = new Date();
+
+    //            // Get the current date
+    //            const date = currentDate.toDateString(); 
+      
+    //              result = await clientModle.addOrderToDataBase( client_name,
+    //                 client_lat_location,
+    //                 client_long_location,
+    //                 phone_num,
+    //                 buy_cylinder,
+    //                 number_cylinders,
+    //                 total_buy_price,
+    //                 filling_cylinder,
+    //                 packing_quantity,
+    //                 total_fill_price,
+    //                 dilvery_price,
+    //                 order_status,
+    //                 company_name,
+    //                 date,
+    //                 total_price,
+    //                 company_lat_location,
+    //                 company_long_location,
+    //                 company_id ,
+    //                 client_id , 
+    //                 0 , // الوقت المقدر لوصول الطلب
+    //                 sender_image , 
+    //                 client_address , 
+    //                 company_address);
+      
+    //               if(result){
+    //                 response.status(200).json({
+    //                     "status":true,
+    //                     "message":"Success Add Order",
+    //                     "data":null
+    //                  });
+
+
+    //                  io.on('connection', (socket) => {
+    //                     console.log('User connected');
+                      
+    //                     // Listen for chat messages
+    //                     socket.on(`notification${company_id}` , (msg) => {
+    //                       io.emit(`notification${company_id}`, msg); // Broadcast the message to all connected clients
+    //                     });
+                      
+    //                     // Listen for disconnections
+    //                     socket.on('disconnect', () => {
+    //                       console.log('User disconnected');
+    //                     });
+    //                   });
+
+                      
+    //                 //   io.on("connection" , (socket)=>{
+    //                 //     console.log(socket.handshake.query.userName)
+
+
+                        
+    //                 //     io.emit(`${company_id}` , {
+    //                 //         "client_name": client_name,
+    //                 //         "phone_num": phone_num,
+    //                 //     })
+    //                 //   })
+
+    //               }else{
+    //                 console.log("this Error")
+    //                 response.status(401).json({
+    //                     "status":false,
+    //                     "message":error,
+    //                     "data":result
+    //                  });    
+
+    //                           }
+
+      
+    //           }
+
+    //     }catch(error){
+
+    //          // You can still access the result variable here if needed
+    // console.error("Error:", error);
+    // console.log(`Error  ${error}`);
+
+    //         response.status(500).json({
+    //             "status":false,
+    //             "message":error,
+    //             "data":result
+    //          });
+    //     }
+
+    //   }
      
       // جلب تفاصيل الطلب عن طريق id
       static async getOrderById(request , response){
@@ -402,8 +513,8 @@ const date = currentDate.toDateString();
 
         try{
 
-            const {sender_id , reciver_id ,user_type } = request.body
-            const result = await clientModle.getAllmessagesById(Number(sender_id) , Number(reciver_id) ,  user_type) ;
+            const {sender_id , reciver_id ,reciver_type , sender_type  } = request.body
+            const result = await clientModle.getAllmessagesById(Number(sender_id) , Number(reciver_id) ,  reciver_type , sender_type) ;
 
             if(result){
                 response.status(200).json({
@@ -495,12 +606,28 @@ const date = currentDate.toDateString();
     socket.on(`chat${reciver_id}` , (msg) => {
       io.emit(`chat${reciver_id}`, msg); // Broadcast the message to all connected clients
     });
+
+    console.log(`Reciver Id ${reciver_id}`);
   
     // Listen for disconnections
     socket.on('disconnect', () => {
       console.log('User disconnected');
     });
   });
+
+
+//   io.on('connection', (socket) => {
+  
+//     // Listen for chat messages
+//     socket.on(`${sender_id}chat${reciver_id}` , (msg) => {
+//       io.emit(`${sender_id}chat${reciver_id}`, msg); // Broadcast the message to all connected clients
+//     });
+  
+//     // Listen for disconnections
+//     socket.on('disconnect', () => {
+//       console.log('User disconnected');
+//     });
+//   });
            
               
            }else{

@@ -18,7 +18,7 @@ companyExpress.post("/showDetailsDriverOnclickTheDriverLocation" , companyContro
 companyExpress.post("/sendNewOrderToDriver" , companyController.newOrderToDriver);
 companyExpress.get("/getAllUsersChatCompany", companyController.getAllUsersINChatCompany);
 companyExpress.post("/sendMessage", companyController.sendMessage);
-companyExpress.get("/getMessagesById", companyController.getMessagesById);
+companyExpress.post("/getMessagesById", companyController.getMessagesById);
 companyExpress.delete("/deleteMessageById", companyController.deleteMessageById);
 companyExpress.get("/getAllCompanyNotificationById", companyController.getAllCompanyNotification);
 

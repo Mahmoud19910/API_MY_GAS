@@ -1,5 +1,7 @@
 import driver from "../modles/driver.js"
 import usersModle from "../modles/users.js";
+import clientModle from "../modles/client.js"
+
 
 
 class DriverController{
@@ -303,6 +305,22 @@ class DriverController{
       console.log('User disconnected');
     });
   });
+
+  io.on('connection', (socket) => {
+    console.log('User connected');
+  
+    console.log("Reciver Why Null")
+    console.log(reciver_id);
+    // Listen for chat messages
+    socket.on(`${sender_id}chat${reciver_id}` , (msg) => {
+      io.emit(`${sender_id}chat${reciver_id}`, msg); // Broadcast the message to all connected clients
+    });
+  
+    // Listen for disconnections
+    socket.on('disconnect', () => {
+      console.log('User disconnected');
+    });
+  });
            
               
            }else{
@@ -327,8 +345,8 @@ class DriverController{
 
         try{
 
-            const {sender_id , reciver_id ,user_type } = request.body
-            const result = await driver.getAllmessagesById(Number(sender_id) , Number(reciver_id) ,  user_type) ;
+            const {sender_id , reciver_id ,reciver_type , sender_type } = request.body
+            const result = await clientModle.getAllmessagesById(Number(sender_id) , Number(reciver_id) ,  reciver_type , sender_type) ;
 
             if(result){
                 response.status(200).json({
