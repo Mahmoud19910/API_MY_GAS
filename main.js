@@ -36,13 +36,13 @@ const io = new Server(server);
 // });
 
 global.__basedir = __dirname;
-global.uploadImageBaseUrl = 'http://localhost:4000/user/files/';
+global.uploadImageBaseUrl = 'http://srv505.hstgr.io:4000/user/files/';
 
 
 
 
 var corsOptions = {
-  origin: "http://localhost:4000",
+  origin: "http://srv505.hstgr.io:4000",
 };
 
 appExpress.use(cors(corsOptions));
