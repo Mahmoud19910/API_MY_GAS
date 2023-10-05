@@ -42,7 +42,7 @@ global.uploadImageBaseUrl = 'http://srv505.hstgr.io:4000/user/files/';
 
 
 var corsOptions = {
-  origin: "http://srv505.hstgr.io:4000",
+  origin: "http://srv505.hstgr.io",
 };
 
 appExpress.use(cors(corsOptions));
