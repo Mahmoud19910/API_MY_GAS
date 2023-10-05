@@ -52,7 +52,7 @@ ClientController.setIO(io);
 CompanyController.setIo(io);
 Company.setIo(io);
 
-const port = process.env.port || 80;
+// const port = process.env.port || 80;
 
 appExpress.use(express.json());
 appExpress.use("/user", usersRoute);
@@ -60,4 +60,4 @@ appExpress.use("/company", companyRoute);
 appExpress.use("/client", clientRoutes);
 appExpress.use("/driver", driverRoutes);
 
-server.listen(port, () => console.log("Running on port num " + port));
+// server.listen(port, () => console.log("Running on port num " + port));
