@@ -52,7 +52,7 @@ ClientController.setIO(io);
 CompanyController.setIo(io);
 Company.setIo(io);
 
-const port = process.env.port || 4000;
+// const port = process.env.port || 4000;
 
 appExpress.use(express.json());
 appExpress.use("/user", usersRoute);
