@@ -19,17 +19,14 @@ const appExpress = express();
 const server = http.createServer(appExpress);
 const io = new Server(server);
 
+// Optional: Enable socket logic when needed
 // io.on('connection', (socket) => {
 //   console.log('User connected');
-
 //   console.log("Reciver Why Null")
 //   console.log(187409233);
-//   // Listen for chat messages
 //   socket.on(`chat${187409233}` , (msg) => {
-//     io.emit(`chat${187409233}`, msg); // Broadcast the message to all connected clients
+//     io.emit(`chat${187409233}`, msg); 
 //   });
-
-//   // Listen for disconnections
 //   socket.on('disconnect', () => {
 //     console.log('User disconnected');
 //   });
@@ -38,26 +35,25 @@ const io = new Server(server);
 global.__basedir = __dirname;
 global.uploadImageBaseUrl = 'http://srv505.hstgr.io:4000/user/files/';
 
-
-
-
 var corsOptions = {
-  origin: "http://srv505.hstgr.io",
+  origin: "http://srv505.hstgr.io:4000",
 };
 
 appExpress.use(cors(corsOptions));
 appExpress.use(express.urlencoded({ extended: true }));
+appExpress.use(express.json());
 
 ClientController.setIO(io);
 CompanyController.setIo(io);
 Company.setIo(io);
 
-// const port = process.env.port || 80;
+// ✅ FIX: Use uppercase PORT (Render uses this)
+const port = process.env.PORT || 4000;
 
-appExpress.use(express.json());
 appExpress.use("/user", usersRoute);
 appExpress.use("/company", companyRoute);
 appExpress.use("/client", clientRoutes);
 appExpress.use("/driver", driverRoutes);
 
-// server.listen(port, () => console.log("Running on port num " + port));
+// ✅ Final listen line for Render compatibility
+server.listen(port, () => console.log("✅ Running on port num " + port));
